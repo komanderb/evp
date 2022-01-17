@@ -16,28 +16,130 @@ library(xml2)
 library(XML)
 library(rvest)
 library(uchardet)
+library(googleLanguageR)
 # Setting working directory 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
 
 ### Latvia --------------------------------------------------------------------
-lat_02 <- read.csv("Latvia/leg_2002/lat_leg_02_1.csv")
-lat_02_2 <- read.csv("Latvia/leg_2002/lat_leg_02_2.csv", header = F)
+lat_02 = read.csv('lat_02.csv', encoding = 'UTF-8')
+lat_02_names = read.csv('lat_02_party.csv', encoding = 'UTF-8')
+lat_names = lat_02[,3]
+lat_names = "Argentina, United States, United States of America, Australia, 
+Australia, Austria, Belarus, Belarus, Belgium, Brazil, Czech Republic, Denmark, France, Greece, Estonia, Italy, 
+Israel, Canada, Canada, Russian Federation, Russian Federation, Russian Federation, China, 
+United Kingdom, Lithuania, Norway, Netherlands, Poland, Portuguese Republic, Finland, Spain, Ukraine, Germany, Venezuela, Sweden"
+lat_names = unlist(strsplit(lat_names, ", "))
+lat_02 = lat_02[-c(37,38), -c(1,2,4)]
+lat_02 = row_to_names(lat_02, 1)
+names(lat_02)[c(1,22)] = c('country', 'valid_votes')
+lat_02$country = lat_names
+lat_02$country = countryname(lat_02$country)
+lat_02$country[is.na(lat_02$country)] = 'Portugal'
+lat_02[22] = lapply(lat_02[22], function(y) as.numeric(y))
+lat_02 = aggregate(c(lat_02[2:22]), by = lat_02[1], sum)
 
-# lat 05 
+lat_02_names$X1 =  gsub("\"", "",lat_02_names$X1)
+lat_02_names$X1 = iconv(lat_02_names$X1, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_names = lat_02_names[,3]
+names(lat_02)[2:21] = lat_names
+lat_02 = main_function(lat_02, 'Apvieniba Tevzemei un Brivibai/LNNK', 'Zalo un Zemnieku savieniba', 3, 'Jaunais laiks')
+lat_02 = extra_cols(lat_02, 'Latvia', '2002-10-05', 'Legislative')
 
+# lat 06
+lat_06 = read.csv('lat_06.csv', encoding = 'UTF-8')
+lat_06_names = read.csv('lat_06_party.csv', encoding = 'UTF-8')
+lat_06 = lat_06[-55, -c(1,2,4)]
+lat_06 = row_to_names(lat_06, 1)
+lat_06 = renamer(lat_06, 1)
+lat_06$country =  gsub(".*\\(", "", lat_06$country)
+lat_06$country =  gsub("\\)", "", lat_06$country)
+lat_06[21] = lapply(lat_06[21], function(y) as.numeric(y))
+lat_06 = aggregate(c(lat_06[2:21]), by = lat_06[1], sum)
+names(lat_06)[21] = 'valid_votes'
+lat_06_names$party_name = gsub("\"", "",lat_06_names$party_name)
+lat_06_names$party_name = iconv(lat_06_names$party_name, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_names = lat_06_names[,3]
+names(lat_06)[2:20] = lat_names
+lat_06 = main_function(lat_06, 'MARAS ZEME', 'Apvieniba Tevzemei un Brivibai/LNNK', 3, 'Tautas partija')
+lat_06 = extra_cols(lat_06, 'Latvia', '2006-10-07', 'Legislative')
+#names here please 
+custom_dict$latvian <- tolower(countrycode::codelist$cldr.name.lv)
+custom_dict$latvian <- iconv(custom_dict$latvian, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+countrycode(tolower(lat_06$country), 'latvian', 'english', custom_dict = custom_dict)
+# did not match a single country // 
+          
 # lat 10: 
-# scraping // 
-link = "https://www.cvk.lv/cgi-bin/wdbcgiw/base/komisijas2010.GalRezs10?nr1=1&nr2=10200"
-bytes <- readLines(link)
-#> Warning in readLines(url): incomplete final line found on 'https://
-#> www.post.japanpost.jp/kitte_hagaki/stamp/kogata/index.php?p=4'
-utf8 <- iconv(bytes, from="EUC-JP", to="UTF-8")  
-html <- read_html(charToRaw(paste(utf8, collapse="\n")), encoding="UTF-8")
-page = read_html(link)
-lat_10 = html %>% html_nodes('table') %>% .[5] %>%
-  html_table() %>% .[[1]]
-html %>% html_nodes('table') %>% htmltab(which = 5)
-lat_10 = html %>% html_nodes('table')
+
+lat_10 = read.csv('lat_leg_10.csv', encoding = 'UTF-8')
+lat_10 = lat_10[-1]
+lat_10$polling_station = gsub("\\(.*", "", lat_10$polling_station)
+lat_10$polling_station = trimws(lat_10$polling_station)
+lat_10 = renamer(lat_10, 1)
+names(lat_10) =  iconv(names(lat_10), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_10 = aggregate(c(lat_10[2:14]), by = lat_10[1], sum)
+lat_10 = add_column(lat_10, valid_votes = rowSums(lat_10[2:14]), .after = 'country')
+names(lat_10) <- gsub("[.]*$|[.]*(?=[.])", "",names(lat_10), perl = TRUE)
+names(lat_10) <- gsub("\\.", " ", names(lat_10))
+lat_10 = main_function(lat_10, 'PCTVL', 'Kristigi demokratiska savieniba', 3, 'VIENOTIBA')
+lat_10 = extra_cols(lat_10, 'Latvia', '2010-10-02', 'Legislative')
+#names missing
+# 2011
+lat_11 = read.csv('lat_leg_2011.csv', encoding = 'UTF-8')
+lat_11 = lat_11[-1]
+lat_11 = renamer(lat_11, 1)
+lat_11$country = gsub("\\(.*", "", lat_11$country)
+lat_11$country = trimws(lat_11$country)
+names(lat_11) =  iconv(names(lat_11), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_11 = aggregate(c(lat_11[2:17]), by= lat_11[1], sum)
+names(lat_11) <- gsub("[.]*$|[.]*(?=[.])", "",names(lat_11), perl = TRUE)
+names(lat_11) <- gsub("\\.", " ", names(lat_11))
+names(lat_11)[9] = 'LPP-LC'
+lat_11 = main_function(lat_11, 'VIENOTIBA', 'Briviba Brivs no bailem naida un dusmam', 5,  'Saskanas Centrs')
+lat_11 = extra_cols(lat_11, 'Latvia', '2011-09-17', 'Legislative')
+
+#2014
+lat_14 = read.csv('lat_leg_14.csv', encoding = 'UTF-8')
+lat_party = read.csv('lat_14_dic.csv', encoding = 'UTF-8')
+lat_14 = lat_14[-1]
+names(lat_14)[1:3] = c('country', 'envelopes', 'some_votes')
+lat_14$country = gsub("\\(.*", "", lat_14$country)
+lat_14$country = trimws(gsub('[0-9]+\\.', '', lat_14$country))
+lat_14 = aggregate(c(lat_14[2:16]), by = lat_14[1], sum)
+lat_14 = add_column(lat_14, valid_votes = rowSums(lat_14[4:16]), .after = 'some_votes')
+lat_14 = lat_14[-3]
+names(lat_14)[2] = 'total_votes'
+lat_party$party_name =  gsub("\"", "",lat_party$party_name)
+lat_party$party_name = iconv(lat_party$party_name, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_names = lat_party[,3]
+names(lat_14)[4:16] = lat_names
+lat_14 = main_function(lat_14, 'Latvijas attistibai', 'No sirds Latvijai', 4, 'Saskana socialdemokratiska partija')
+lat_14 = extra_cols(lat_14, 'Latvia', '2014-10-04', 'Legislative')
+
+
+##Legislative 2018
+lat_18 = read_xlsx("Latvia/leg_2018/Latvia Leg. 2018 abroad raw data.xlsx")
+lat_18 = lat_18[-c(1,125:134), -c(1,22)]
+lat_18 = renamer(lat_18, 1)
+lat_18$country = trimws(gsub("\\(.*", "", lat_18$country))
+lat_18$weird = countryname(lat_18$country)
+latvian = c('PORTUGUESE REPUBLIC', 'THE ITALIAN REPUBLIC')
+english = c('Portugal', 'Italy')
+for (i in 1:2){
+  lat_18$weird[lat_18$country == latvian[i]] = english[i]
+} 
+
+lat_18$country = countryname(lat_18$weird)
+lat_18$country[is.na(lat_18$country)] = 'Military Base'
+lat_names = names(lat_18)[5:20]
+lat_18[2:20] = lapply(lat_18[2:20], function(y) as.numeric(as.character(y)))
+lat_18 = aggregate(c(lat_18[2:20]), by = lat_18[1], sum)
+# tbf I don't think the second column is registered_voters
+# but but but 
+names(lat_18)[2:4] = c('registered_voters', 'total_votes', 'valid_votes')
+lat_names = trimws(gsub("\"","", lat_names))
+names(lat_18)[5:20] = lat_names
+lat_18 = main_function(lat_18, 'Russian Federation of Latvia', "Union of Greens and Farmers", 5, 'Harmony Social Democratic Party')
+lat_18 = extra_cols(lat_18, 'Latvia', '2018-10-06', 'Legislative')
 
 ###Poland -----------------------------------------------------------------------
 # Legislative 2001
@@ -96,25 +198,47 @@ for (i in 1:3){
 }
 pol_07$country = countryname(pol_07$weird)
 pol_07 = pol_07[-26]
-# 2011:
-link = "https://wybory2011.pkw.gov.pl/wyn/140000/pl/149901.html#tabs-1"
-page = read_html(link)
-pol_l_2011 <- page %>% html_nodes('table') %>% .[2] %>%
-  html_table() %>% .[[1]]
-## that worked!! -> but it is only voter data 
-link = 'https://wybory2011.pkw.gov.pl/rfl/pl/a37acdd2b4996b08222e85815b6da20a.html'
-page = read_html(link)
-# now there is a problem.. -> website is dynamic //
+# Legislative 2011:
 
-#d ChromeDriver 96.0.4664.45
-rD <- rsDriver(browser = 'chrome', port = 1234L, chromever = "96.0.4664.45") # not working
-driver <- remoteDriver()
-driver$open()
+pol_11 = read.csv('pol_leg_2011.csv', encoding = 'UTF-8')
+# I will drop valid cards
+pol_11 = pol_11[-c(1,2,4,7)]
+pol_11 = aggregate(c(pol_11[2:11]), by = pol_11[1], sum)
+
+names(pol_11) <- gsub("[.]*$|[.]*(?=[.])", "",names(pol_11), perl = TRUE)
+names(pol_11) <- gsub("\\.", " ", names(pol_11))
+
+pol_11 = main_function(pol_11, "Prawo i Sprawiedliwosc", "Obywatelska RP", 5, "Obywatelska RP")
+pol_11 = extra_cols(pol_11, 'Poland', '2011-10-09', 'Legislative')
+
+pol_11$country = iconv(pol_11$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+pol_11$weird = countrycode(tolower(pol_11$country), 'polish', 'english', custom_dict = custom_dict)
+polish = "georgia, koreanska republika ludowo-demokratyczna, macedonia, republika korei"
+polish = unlist(strsplit(polish, ", "))
+english = c("Georgia", 'North Korea', "North Macedonia", 'South Korea')
+for (i in 1:4){
+  pol_11$weird[tolower(pol_11$country) == polish[i]] = english[i]
+}
+pol_11$country = countryname(pol_11$weird)
+pol_11$country[is.na(pol_11$country)] = 'Military Bases'
+pol_11 = pol_11[-24]
+
 
 ## Legislative 2015
-
 pol_15 = read_xlsx("Poland/Raw Data (Warsaw constituency, includes abroad).xlsx")
 pol_15 = pol_15 %>% filter(Gmina == "Zagranica")
+## the xlsx is useless
+pol_15 = read.csv('pol_leg_15.csv', encoding = 'UTF-8')
+pol_15 = pol_15[-1]
+names(pol_15)[1:4] = c('country', 'registered_voters', 'total_votes', 'valid_votes')
+# here total votes is infered from valid cards -> assuming that means all the votes received (but unsure)
+names(pol_15)[5:14] = gsub("Komitet.Wyborczy.", "", names(pol_15)[5:14])
+names(pol_15)[5:14] = gsub("Wyborców.", "", names(pol_15)[5:14])
+names(pol_15)[5:14] <- gsub("[.]*$|[.]*(?=[.])", "",names(pol_15)[5:14], perl = TRUE)
+names(pol_15)[5:14] <- gsub("\\.", " ", names(pol_15)[5:14])
+pol_15 = main_function(pol_15, 'Prawo i Sprawiedliwosc', 'Ruch Spoleczny Rzeczypospolitej Polskiej', 5, 'Prawo i Sprawiedliwosc')
+pol_15 = extra_cols(pol_15, 'Poland', '2015-10-25', 'Legislative')
+# names missing
 
 
 ## Legislative 2019
@@ -147,9 +271,10 @@ pol_19$country = iconv(pol_19$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
 # makes no sense
 pol_19$weird = gsub("Krolestwo ", "", pol_19$country)
 pol_19$weird = gsub("koreanska")
-countrycode(tolower(pol_19$country), 'polish', 'english', custom_dict = custom_dict)
+pol_19$weird = countrycode(tolower(pol_19$country), 'polish', 'english', custom_dict = custom_dict)
+polish = c(pol_19$country[is.na(pol_19$weird)])
 ## also not working // leave that polish election for last 
-
+paste(polish, collapse = " ", sep = ",")
 
 # Presidential 2000
 polp_00 = read_xls("Poland/pol_2000/Poland Pres. 2000.xls")
@@ -220,7 +345,17 @@ polp_10$country = countryname(polp_10$country)
 ## Presidential 2015
 polp_15 = read_xls("Poland/pres_2015/PollingStation Codes wyniki_tura1-1.xls")
 polp_15 = polp_15 %>% filter(Gmina == "Zagranica")
-
+polp_15$country =  regmatches(polp_15$Siedziba ,gregexpr(",[^,]*$",polp_15$Siedziba,perl=TRUE))
+polp_15 = polp_15[-c(1),]
+polp_15$country = gsub(".*, ", "", polp_15$country)
+polp_15 = polp_15[-c(1:7)]
+names(polp_15)[c(1,17:19)] = c("registered_voters", "total_votes", "invalid_votes", "valid_votes")
+polp_15 = polp_15[c(1,17:19, 21:32)]
+name = names(polp_15)[5:15]
+polp_15 = aggregate(c(polp_15[1:15]), by = polp_15[16], sum)
+names(polp_15)[6:16] = iconv(name, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+polp_15 = main_function(polp_15, "Grzegorz Michal Braun", "Jacek Wilk", 6, "Andrzej Sebastian Duda")
+polp_15 = extra_cols(polp_15, "Poland", "2015-05-10","Presidential")
 
 #### Czechia ===================================================================
 ##Presidential 2013
@@ -275,35 +410,197 @@ czp_18$country = countrycode(czp_18$country, "iso2c", "country.name")
 czp_18$country[is.na(czp_18$country)] = "Kosovo"
 czp_18$country = countryname(czp_18$country)
 
-#### Indonesia =================================================================
 
-#trying to scrape indonesia
-link = "https://pemilu2019.kpu.go.id/#/dprri/hitung-suara/"
-page = read_html(link)
-indo = page %>% html_nodes('data-table')
-# problematic as dynamic website
-### Ecuador:--------------------------------------------------------------------
-setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Leg. 2009 National MPs/USA + Canada")
-my_files <- list.files(pattern = "\\.xlsx$")
-df_list <- lapply(my_files, read_xlsx)
-for (i in 1:2){
-  df_list[[i]] <- df_list[[i]][-5]
+## Legislative 2006 
+cz_06 = read.csv("Czechia/leg_2006/result (6).csv", encoding = 'UTF-8')
+cz_06_names = read.csv("Czechia/leg_2006/result (7).csv", encoding = 'UTF-8')
+cz_06 = cz_06[-c(1:7, 9:11, 21:44)]
+names(cz_06)[c(1:3,6,8,9)] = c('country', 'registered_voters', 'total_votes', 'valid_votes',
+                               'party_number', 'party_votes')
+cz_06 = cz_06[c(1:3,6,8,9)]
+cz_06_names = cz_06_names[c(17,18)]
+cz_06_names = cz_06_names %>% filter(!duplicated(KRAJ__STRANA__KSTRANA))
+cz_06_names$KRAJ__STRANA__NAZ_STR = iconv(cz_06_names$KRAJ__STRANA__NAZ_STR, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+names(cz_06_names) = c('party_code', 'party_name')
+cz_06$party_number = countrycode(cz_06$party_number, 'party_code', 'party_name', custom_dict = cz_06_names)
+cz_06$country = iconv(cz_06$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+names(cz_06)[5] = 'party_name'
+#write.csv(cz_06, 'cz_leg_06.csv')
+
+cz_06 = cz_06 %>% pivot_wider(names_from = party_name,values_from = party_votes)
+cz_06 = main_function(cz_06, 'Strana zdraveho rozumu', 'STRANA ROVNOST SANCI', 5, 'Obcanska demokraticka strana')
+cz_06 = extra_cols(cz_06, 'Czechia', '2006-06-02', 'Legislative')
+
+custom_dict$czech = tolower(countrycode::codelist$cldr.name.cs)
+custom_dict$czech = iconv(custom_dict$czech, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+cz_06$weird = countrycode(tolower(cz_06$country), 'czech', 'english', custom_dict = custom_dict)
+czech = "korejska lid.demokr.r, korejska republika, spojene arabske emira, srbsko a cerna hora, svaty stolec"
+czech = unlist(strsplit(czech, ", "))
+
+english = "Democratic People's Republic of Korea, Republic of Korea, United Arab Emirates, Serbia and Montenegro, Holy See"
+english = unlist(strsplit(english, ", "))
+english = countryname(english)
+for (i in 1:5){
+  cz_06$weird[tolower(cz_06$country) == czech[i]] = english[i]
 }
-ita_06 <- do.call(rbind, df_list)
+
+cz_06$country = countryname(cz_06$weird)
+cz_06 = cz_06[-48]
+
+# big problems -> all the votes have the same value!! for each country
 
 
-# trying scraping: 
-link = 'https://app01.cne.gob.ec/resultados2017/frmResultados.aspx'
-page = read_html(link)
-name = page %>% html_nodes('#tablaSuf , #tablaBlancosNulos , #tablaCandi , #datosmesashabilitadas' %>% html_text())
-ec_table = page %>% html_nodes("#tablaSuf") %>%
-  html_table(dec = ",", header = T) # %>% .[[1]]
-data <- link %>%
-  read_html() %>%
-  html_nodes(xpath = '//*[(@id = "tablaCandi")]') %>%
-  html_table()
-data <- data[[1]]
+## legislative 2010
 
+cz_10 = read.csv("Czechia/leg_2010/result (4).csv", encoding = 'UTF-8')
+cz_10 = cz_10[-c(1:6, 8:11, 21:44)]
+names(cz_10)[c(1:3,6,8,9)] = c('country', 'registered_voters', 'total_votes', 'valid_votes',
+                               'party_number', 'party_votes')
+cz_10 = cz_10[c(1:3,6,8,9)]
+cz_10 = cz_10 %>% filter(!(is.na(registered_voters)))
+
+cz_10_names = read.csv("Czechia/leg_2010/result (5).csv", encoding = 'UTF-8')
+cz_10_names = cz_10_names[c(17,18)]
+cz_10_names = cz_10_names %>% filter(!duplicated(KRAJ__STRANA__KSTRANA))
+names(cz_10_names) = c('party_code', 'party_name')
+cz_10_names$party_name = iconv(cz_10_names$party_name, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+cz_10$party_number = countrycode(cz_10$party_number, 'party_code', 'party_name', custom_dict = cz_10_names)
+names(cz_10)[5] = 'party_name'
+write.csv(cz_10, 'cz_leg_10.csv')
+
+cz_10 = cz_10 %>% pivot_wider(names_from = party_name,values_from = party_votes)
+cz_10[is.na(cz_10)] = 0
+cz_10 = main_function(cz_10, 'Ceska str.socialne demokrat.', 'STOP', 5, 'Ceska str.socialne demokrat.')
+cz_10 = extra_cols(cz_10, 'Czechia', '2010-05-28', 'Legislative')
+cz_10$country = countrycode(cz_10$country, 'iso2c', 'country.name')
+cz_10$country = countryname(cz_10$country)
+cz_10$country[is.na(cz_10$country)] = 'Kosovo'
+
+#### Indonesia =================================================================
+#Legislative 2019
+ind_19 = read.csv('indo_leg_19.csv')
+ind_19$WILAYAH =  gsub("\\(.*", "", ind_19$WILAYAH)
+ind_19$WILAYAH = trimws(ind_19$WILAYAH)
+ind_19$WILAYAH = gsub(".*,", "", ind_19$WILAYAH)
+ind_19 = ind_19[-c(1,19)]
+ind_19 = ind_19 %>% filter(!(PKB == 'Data belum tersedia'))
+ind_19[2:17] = lapply(ind_19[2:17], function(y) as.numeric(y))
+ind_19 = renamer(ind_19, 1)
+ind_19 = aggregate(c(ind_19[2:17]), by = ind_19[1], sum)
+ind_19 = add_column(ind_19, valid_votes = rowSums(ind_19[2:17]), .after = 'country')
+ind_19 = main_function(ind_19, 'PKB', 'PKPI', 3, 'PDIP')
+ind_19 = extra_cols(ind_19, 'Indonesia', '2019-04-17', 'Legislative')
+# country missing // 
+#Presidential 2019
+indp_19 = read.csv('indo_pres_19.csv')
+indp_19$WILAYAH =  gsub("\\(.*", "", indp_19$WILAYAH)
+indp_19$WILAYAH = trimws(indp_19$WILAYAH)
+indp_19$WILAYAH = gsub(".*,", "", indp_19$WILAYAH)
+indp_19 = indp_19[-1]
+# I will translate candidate names into party straight away -> easy here 
+names(indp_19) = c('country', 'PDIP', 'Gerindra')
+indp_19 = aggregate(c(indp_19[2:3]), by = indp_19[1], sum)
+indp_19 = add_column(indp_19, valid_votes = rowSums(indp_19[2:3]), .after = 'country')
+indp_19 = main_function(indp_19, 'PDIP', 'Gerindra', 3, 'PDIP')
+indp_19 = extra_cols(indp_19, 'Indonesia', '2019-04-17', 'Presidential')
+#names missing // 
+### Ecuador:--------------------------------------------------------------------
+# Legislative 2009
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Leg. 2009 National MPs")
+my_files <- list.files(pattern = "\\.xlsx$")
+my_files_2 = my_files[grep("-2.xlsx", my_files)]
+my_files_3 = my_files[-grep("-2.xlsx", my_files)]
+df_list <- lapply(my_files_3, read_xlsx, range = cell_rows(1:19))
+my_files_3 = gsub("\\.xlsx$", "", my_files_3)
+my_files_3 = gsub("PAIS_", "", my_files_3)
+my_files_3 = gsub("S_", "", my_files_3)
+names(df_list) = my_files_3
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+ec_09 <- do.call(rbind, df_list)
+rownames(ec_09) = NULL
+
+df_list = lapply(my_files_2, read_xlsx, range = cell_rows(1:7))
+for (i in 1:41){
+  df_list[[i]] = df_list[[i]][-c(3:4)]
+}
+
+my_files_2 = gsub("\\-2.xlsx$", "", my_files_2)
+my_files_2 = gsub("PAIS_", "", my_files_2)
+my_files_2 = gsub("S_", "", my_files_2)
+
+names(df_list) = my_files_2
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+ec_09_e <- do.call(rbind, df_list)
+rownames(ec_09_e) = NULL
+
+ec_09 = ec_09[-3]
+ec_09 = ec_09 %>% pivot_wider(names_from = `ORGANIZACIÓN POLÍTICA`, values_from = VOTOS)
+ec_09_e = ec_09_e %>% pivot_wider(names_from = INFORMACIÓN, values_from = TOTAL)
+
+ec_09 = left_join(ec_09, ec_09_e)
+# how can be the number of voters half as big as the number of valid votes? that will be dropped then 
+ec_09 = ec_09[-c(20,21,25)]
+#also values for cuba are missing but I'm unable to find them // 
+ec_09 = main_function(ec_09, 'MPAIS', 'MNCS', 5, 'MPAIS')
+ec_09 = extra_cols(ec_09, 'Ecuador', '2009-04-26', 'Legislative')
+ec_09$weird = countrycode(tolower(ec_09$country), 'spanish', 'english', custom_dict = custom_dict)
+spanish = 'belgica, canada, corea (sur) republica de, 
+espaaa, estados unidos de america, federacion de rusia, 
+hungria, japon, mexico, paises bajos (holanda), 
+panama, peru, reino unido de gran breta, republica dominicana'
+# fuck that 
+
+
+## Legislative 2013
+# italy is missing
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Leg. 2013 National MPs")
+my_files <- list.files(pattern = "\\.xlsx$")
+my_files_2 = my_files[grep("-2.xlsx", my_files)]
+my_files_3 = my_files[-grep("-2.xlsx", my_files)]
+
+df_list <- lapply(my_files_3, read_xlsx, range = cell_rows(1:12))
+my_files_3 = gsub("\\.xlsx$", "", my_files_3)
+my_files_3 = gsub("PAIS_", "", my_files_3)
+names(df_list) = my_files_3
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+ec_13 <- do.call(rbind, df_list)
+rownames(ec_13) = NULL
+
+df_list = lapply(my_files_2, read_xlsx, range = cell_rows(1:7))
+for (i in 1:46){
+  df_list[[i]] = df_list[[i]][-c(3:4)]
+}
+
+my_files_2 = gsub("\\-2.xlsx$", "", my_files_2)
+my_files_2 = gsub("PAIS_", "", my_files_2)
+names(df_list) = my_files_2
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+ec_13_e <- do.call(rbind, df_list)
+rownames(ec_13_e) = NULL
+
+ec_13 = ec_13[-3]
+ec_13 = ec_13 %>% pivot_wider(names_from = `ORGANIZACIÓN POLÍTICA`, values_from = VOTOS)
+ec_13_e = ec_13_e %>% pivot_wider(names_from = INFORMACIÓN, values_from = TOTAL)
+ec_13 = left_join(ec_13, ec_13_e)
+ec_13 = ec_13[-c(13,14,18)]
+ec_13 = main_function(ec_13, 'MPAIS', 'AVANZA', 5, 'MPAIS')
+ec_13 = extra_cols(ec_13, 'Ecuador', '2013-02-17', 'Legislative')
+ec_13$weird = countrycode(tolower(ec_13$country), 'spanish', 'english', custom_dict = custom_dict)
+spanish = "belgica, canada, corea (sur) republica de, espaaa, estados unidos de america, federacion de rusia, hungria, japon, mexico, paises bajos (holanda), panama, peru, qatar, reino unido de gran bretaaa e irlanda del norte, republica dominicana, sudafrica, turquia"
+spanish = unlist(strsplit(spanish, ", "))
+english = c('Belgium', 'Canada', 'South Korea', 'Spain', 'US', 'Russia', 'Hungary', 'Japan', 'Mexico', 'Netherlands',
+            'Panama', 'Peru', 'Qatar', 'UK', 'Dominican Republic', 'South Africa', 'Turkey')
+
+for (i in 1:17){
+  ec_13$weird[tolower(ec_13$country) == spanish[i]] = english[i]
+}
+
+ec_13$country = countryname(ec_13$weird)
+ec_13 = ec_13[-32]
 #### Croatia ------------------------------------------------------------------
 # Pres 200
 cro <- read_xlsx("Croatia/pres_2000/Predsjednik 2000 po BM - 1. krug.xlsx", sheet = 2)

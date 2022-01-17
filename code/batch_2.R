@@ -312,11 +312,38 @@ for (i in 1:2){
 ita_06 <- do.call(rbind, df_list)
 ita_06 <- ita_06[-4]
 names(ita_06) <- c('country', 'party', 'votes')
+## missing south american countries
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
+ita_sa = read.csv('italy_2006.csv')
+ita_sa = ita_sa[-1]
+ita_sa = ita_sa %>% pivot_wider(names_from = Liste.Gruppi.1,  values_from = Voti)
 ita_06 <- ita_06 %>% pivot_wider(names_from = party, values_from = votes)
+ita_06 = bind_rows(ita_06, ita_sa)
+## apparantly there are two per italia nel mondo parties (columns) for all european 
+# countries -> they have different values but as I can't figure out whats wrong I will drop the second one
+ita_06 = ita_06[-14]
 ita_06[is.na(ita_06)] <- 0
-setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Italy/Italy Leg. 2006 Sources")
-## problem south american votes are missing // 
 
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Italy/Italy Leg. 2006 Sources")
+my_files = list.files(pattern = "\\.csv$")
+df_list <- lapply(my_files, read.csv, sep = ";", header = F)
+
+for (i in 2:3){
+  df_list[[i]] =  df_list[[i]][-6]
+}
+
+for (i in 1:4){
+  df_list[[i]] = row_to_names(df_list[[i]], 1)
+}
+
+df_list[[4]] = row_to_names(df_list[[4]], 1)
+
+ita_06_e <- do.call(rbind, df_list)
+ita_06_e$Ente = trimws(ita_06_e$Ente)
+countrycode(tolower(ita_06_e$Ente), 'italian', 'english', custom_dict = custom_dict)
+## too many Na's 
+# will do later 
+ita_06 = main_function(ita_06, 'FORZA ITALIA', 'U.S.E.I.', 2, "L'UNIONE")
 # 2013 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Italy/Italy Leg. 2013 Sources")
 my_files <- list.files(pattern = "\\.csv$")
