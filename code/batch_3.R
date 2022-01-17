@@ -546,11 +546,18 @@ ec_09 = ec_09[-c(20,21,25)]
 ec_09 = main_function(ec_09, 'MPAIS', 'MNCS', 5, 'MPAIS')
 ec_09 = extra_cols(ec_09, 'Ecuador', '2009-04-26', 'Legislative')
 ec_09$weird = countrycode(tolower(ec_09$country), 'spanish', 'english', custom_dict = custom_dict)
-spanish = 'belgica, canada, corea (sur) republica de, 
-espaaa, estados unidos de america, federacion de rusia, 
-hungria, japon, mexico, paises bajos (holanda), 
-panama, peru, reino unido de gran breta, republica dominicana'
-# fuck that 
+spanish = 'belgica, canada, corea (sur) republica de, espaaa, estados unidos de america, federacion de rusia, hungria, japon, mexico, paises bajos (holanda), panama, peru, reino unido de gran breta, republica dominicana'
+spanish = unlist(strsplit(spanish, ", "))
+english = c("belgium", "canada", "korea (south) republic of", "spain", "united states of america", "russian federation",
+            "hungary", "japan", "mexico", "netherlands",
+            "panama", "peru", "uk", "dominican republic")
+
+for (i in 1:14){
+  ec_09$weird[tolower(ec_09$country) == spanish[i]] = english[i]
+}
+
+ec_09$country = countryname(ec_09$weird)
+ec_09 = ec_09[-46]
 
 
 ## Legislative 2013
@@ -601,6 +608,88 @@ for (i in 1:17){
 
 ec_13$country = countryname(ec_13$weird)
 ec_13 = ec_13[-32]
+names(ec_13)[5:7] = c('valid_votes','blanco_votes', 'null_votes')
+
+## Presidential Election:
+direct = c("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Sources Ecuador Pres. 2006",
+           "C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Sources Ecuador Pres. 2009",
+           "C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Sources Ecuador Pres. 2013")
+
+df_names = c('ecp_06', 'ecp_09', 'ecp_13')
+
+number_range = c(14, 9,9)
+for (i in 1:3){
+  setwd(direct[i])
+  my_files <- list.files(pattern = "\\.xlsx$")
+  my_files_2 = my_files[grep("-2.xlsx", my_files)]
+  my_files_3 = my_files[-grep("-2.xlsx", my_files)]
+  df_list <- lapply(my_files_3, read_xlsx, range = cell_rows(1:number_range[i]))
+  my_files_3 = gsub("\\.xlsx$", "", my_files_3)
+  my_files_3 = gsub("PAIS_", "", my_files_3)
+  names(df_list) = my_files_3
+  for(j in seq_along(df_list))
+    df_list[[j]]$country = names(df_list)[j]
+  df <- do.call(rbind, df_list)
+  rownames(df) = NULL
+  df_list = lapply(my_files_2, read_xlsx, range = cell_rows(1:7))
+  for (k in seq_along(df_list)){
+    df_list[[k]] = df_list[[k]][-c(3:4)]
+  }
+  my_files_2 = gsub("\\-2.xlsx$", "", my_files_2)
+  my_files_2 = gsub("PAIS_", "", my_files_2)
+  names(df_list) = my_files_2
+  for(l in seq_along(df_list)){
+    df_list[[l]]$country = names(df_list)[l]
+  }
+  df_e <- do.call(rbind, df_list)
+  rownames(df_e) = NULL
+  df = df[-3]
+  df = df %>% pivot_wider(names_from = `ORGANIZACIÓN POLÍTICA`, values_from = VOTOS)
+  df_e = df_e %>% pivot_wider(names_from = INFORMACIÓN, values_from = TOTAL)
+  df = left_join(df, df_e)
+  assign(df_names[i], df)
+}
+
+## Presidential 06
+ecp_06 = ecp_06[-c(15,16,20)]
+ecp_06 = main_function(ecp_06, 'ID/RED', 'INA', 5, 'PRIAN')
+ecp_06 = extra_cols(ecp_06, 'Ecuador', '2006-10-15', 'Presidential')
+names(ecp_06)[5:7] = c('valid_votes', 'blanco_votes', 'null_votes')
+ecp_06$weird = countrycode(tolower(ecp_06$country), 'spanish', 'english', custom_dict = custom_dict)
+# actually same names did not match as above // 
+for (i in 1:14){
+  ecp_06$weird[tolower(ecp_06$country) == spanish[i]] = english[i]
+}
+
+ecp_06$country = countryname(ecp_06$weird)
+ecp_06 = ecp_06[-36]
+## Presidential 2009
+ecp_09 = ecp_09[-c(10,11,15)]
+ecp_09 = main_function(ecp_09, 'MPAIS', 'MIJS', 5, 'MPAIS')
+ecp_09 = extra_cols(ecp_09, 'Ecuador', '2009-04-26', 'Presidential')
+names(ecp_09)[5:7] = c('valid_votes', 'blanco_votes', 'null_votes')
+# it is the same names in the same order as 2006
+ecp_09$country = ecp_06$country
+
+##Presidential 2013
+ecp_13 = ecp_13[-c(10,11,15)]
+ecp_13 = main_function(ecp_13, 'MPAIS', 'RUPTURA', 5, 'MPAIS')
+ecp_13 = extra_cols(ecp_13, 'Ecuador', '2013-02-17', 'Presidential')
+names(ecp_13)[5:7] = c('valid_votes', 'blanco_votes', 'null_votes')
+ecp_13$weird = countrycode(tolower(ecp_13$country), 'spanish', 'english', custom_dict = custom_dict)
+spanish = "belgica, canada, corea (sur) republica de, espaaa, estados unidos de america, federacion de rusia, hungria, japon, mexico, paises bajos (holanda), panama, peru, qatar, reino unido de gran bretaaa e irlanda del norte, republica dominicana, something, sudafrica, turquia"
+spanish = unlist(strsplit(spanish, ", "))
+english = c('Belgium', 'Canada', 'South Korea', 'Spain', 'US', 'Russia', 'Hungary', 'Japan', 'Mexico', 'Netherlands',
+            'Panama', 'Peru', 'Qatar', 'UK', 'Dominican Republic', 'something', 'South Africa', 'Turkey')
+for (i in 1:18){
+  ecp_13$weird[tolower(ecp_13$country) == spanish[i]] = english[i]
+}
+
+ecp_13$country = countryname(ecp_13$weird)
+ecp_13 = ecp_13[-26]
+## there is one NA country -> where the excel had just the continent (Caribik, South America, Africa but no name)
+
+
 #### Croatia ------------------------------------------------------------------
 # Pres 200
 cro <- read_xlsx("Croatia/pres_2000/Predsjednik 2000 po BM - 1. krug.xlsx", sheet = 2)
@@ -656,16 +745,33 @@ names(mol_16) = gsub("Partidul Politic ", "", names(mol_16))
 #problem with the encoding
 
 mol_16$country =  gsub("(.*)-.*", "\\1", mol_16$country)
+mol_16$country = gsub("-.*", "", mol_16$country)
 mol_16[2:15] = lapply(mol_16[2:15], function(y) as.numeric(y))
 names(mol_16) = iconv(names(mol_16), from = "UTF-8", to = 'ASCII//TRANSLIT')
+# a bit problematic -> will translate names by hand //
 mol_16 = aggregate(c(mol_16[2:15]), by = mol_16[1], sum)
-# problems with encoding 
-readr::guess_encoding("Moldova/pres_2016/1stRound. finalallt1prez20175034720_6383668.xlsx")
+names(mol_16)[5:14] = c('Partidul Democrat din Moldova','Partidul Liberal', 'Partidul Popular European din Moldova','Partidul Nostru',
+                        'Partidul Actiune si Solidaritate','Partidul Socialistilor din Republica Moldova',
+                        'Silvia Radu', 'Maia Laguta', 'Partidul Dreapta', "Valeriu Ghiletchi")
+
+mol_16 = main_function(mol_16, 'Partidul Democrat din Moldova', "Valeriu Ghiletchi", 6, 'Partidul Socialistilor din Republica Moldova')
+mol_16 = extra_cols(mol_16, 'Moldova', '2016-10-30', 'Presidential')
+mol_16$country = iconv(mol_16$country, from = "UTF-8", to = 'ASCII//TRANSLIT')
+mol_16$country = trimws(mol_16$country)
+custom_dict$romanian = iconv(custom_dict$romanian, from = "UTF-8", to = 'ASCII//TRANSLIT')
+mol_16$weird = countrycode(tolower(mol_16$country), 'romanian', 'english', custom_dict = custom_dict)
+romanian = "elvetia, franta, marea britanie, olanda, sua"
+romanian = unlist(strsplit(romanian, ", "))
+english = c('Switzerland', 'France', 'UK', 'Netherlands', 'US')
+for (i in 1:5){
+  mol_16$weird[tolower(mol_16$country) == romanian[i]] = english[i]
+}
+mol_16$country = countryname(mol_16$weird)
+mol_16 = mol_16[-31]
 
 
-detect_str_enc(names(mol_16))
-detect_str_enc(mol_16$country)
-#encoding problematic
+## Legislative 2019
+
 
 #### Paraguay =================================================================
 df_par = read.csv("Paraguay/resultados-1996-2018-municipales-y-generales.csv", sep = ";")
