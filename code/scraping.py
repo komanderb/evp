@@ -43,38 +43,37 @@ url = "https://wybory2011.pkw.gov.pl/rfl/pl/a37acdd2b4996b08222e85815b6da20a.htm
 browser = webdriver.Chrome(ChromeDriverManager().install())
 browser.get(url)
 
-#KW Prawo i Sprawiedliwość
-table_1 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_1 = pd.read_html(table_1.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
-# as this website is dynamic / session changes a bit 
+def scrape_poland_space():
+    table = browser.find_element_by_xpath('//*[@id="container-149901"]')
+    df = pd.read_html(table.get_attribute('outerHTML'), decimal=',', thousands='\xa0')[0]
+    return(df)
+    
 
+#KW Prawo i Sprawiedliwość
+df_1 = scrape_poland_space()
+
+# as this website is dynamic / session changes a bit 
 #KW Polska Jest Najważniejsza
-table_2 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_2 = pd.read_html(table_2.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_2 = scrape_poland_space()
 
 #Komitet Wyborczy SLD
-table_3 =  browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_3 = pd.read_html(table_3.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_3 = scrape_poland_space()
 
 #Komitet Wyborczy Ruch Palikota
-table_4 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_4 = pd.read_html(table_4.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_4 = scrape_poland_space()
 
 #Komitet Wyborczy PSL
-table_5 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_5 = pd.read_html(table_5.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_5 = scrape_poland_space()
 
 #Komitet Wyborczy PPP - Sierpień 80
-table_6 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_6 = pd.read_html(table_6.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_6 = scrape_poland_space()
 
 #KW Platforma Obywatelska RP
-table_7 = browser.find_element_by_xpath('//*[@id="container-149901"]')
-df_7 = pd.read_html(table_7.get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+df_7 = scrape_poland_space()
 
 #main
 table = browser.find_element_by_xpath('//*[@id="first"]/div/table')
-df_poland = pd.read_html(table.get_attribute('outerHTML'))[0]
+df_poland = pd.read_html(table.get_attribute('outerHTML'), decimal=',', thousands='\xa0')[0]
 
 browser.close()
 
@@ -83,36 +82,23 @@ df_poland = df_poland.drop([6,7,9,10], axis = 1)
 df_poland.columns = ['pol_sta_nr', 'country', 'polling_station', 'registered_voters',
                      'total_votes', 'valid_cards', 'valid_votes']
 df_poland = df_poland.drop([0,1,2,261])
-# did a stupid mistake below -> dfs below have space at the end
-df_poland.rename({'pol_sta_nr': "pol_sta_nr "}, axis='columns', inplace=True)
-df_list = [df_4, df_5, df_6, df_7]
+#
+df_list = [df_1, df_2, df_3, df_4, df_5, df_6, df_7]
 party_names = ["Prawo i Sprawiedliwość", "Polska Jest Najważniejsza", "SLD", "Ruch Palikota",
                "PSL", "PPP - Sierpień 80", "Obywatelska RP"]
 
 # I tried a loop but I failed 
 cols = [1,2,4,5]
-df_1.drop(cols, axis=1, inplace=True)
-df_1.rename({0: 'pol_sta_nr ', 3: party_names[0]}, axis = 'columns', inplace=True)
-
-df_2.drop(cols, axis=1, inplace=True)
-df_2.rename({0: 'pol_sta_nr ', 3: party_names[1]}, axis = 'columns', inplace=True)
-
-df_3.drop(cols, axis=1, inplace=True)
-df_3.rename({0: 'pol_sta_nr ', 3: party_names[2]}, axis = 'columns', inplace=True)
-
-# hah but not pretty
+counter = 0
 for i in df_list:
     i.drop(cols, axis = 1, inplace=True)
-
-counter = 3
-for i in df_list:
-    i.rename({0: 'pol_sta_nr ', 3: party_names[counter]}, axis = 'columns', inplace=True)
+    i.rename({0: 'pol_sta_nr', 3: party_names[counter]}, axis = 'columns', inplace=True)
     counter += 1
 
 # merge all the dataframes
 
 data_frames = [df_poland, df_1, df_2, df_3, df_4, df_5, df_6, df_7]
-df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['pol_sta_nr '],
+df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['pol_sta_nr'],
                                             how='outer'), data_frames)
 
 df_merged.to_csv("pol_leg_2011.csv")
@@ -260,10 +246,50 @@ df_lat.to_csv("lat_leg_14.csv")
 url = 'https://www.cvk.lv/cgi-bin/wdbcgiw/base/saeima9.GalRezS9.vis'
 browser = webdriver.Chrome(ChromeDriverManager().install())
 browser.get(url)
-table = browser.find_element_by_xpath('/html/body/i/font/center/table[2]')
-df_lat = pd.read_html(table.get_attribute('outerHTML'))[0]
-## not working
+frame_switch('html > frameset > frame:nth-child(2)')
+df_lat = table_scraper('/html/body/i/font/center/table[2]')
+lat_party = table_scraper('/html/body/i/font/center/table[1]')
+
 browser.close()
+
+#working with the data
+part_1 = lat_party.iloc[:,0:2]
+part_2 = lat_party.iloc[:,2:4]
+part_3 = lat_party.iloc[:, 4:6]
+
+part_list = [part_1, part_2, part_3]
+for part in part_list:
+    part.columns = ['party_number', 'party_name']
+lat_party = pd.concat(part_list, ignore_index=True)
+lat_party.dropna(inplace=True)
+lat_party.to_csv('lat_06_party.csv')
+df_lat.to_csv('lat_06.csv')
+
+
+## latvia 2002 
+url = 'https://www.cvk.lv/cgi-bin/wdbcgiw/base/sae8dev.vel8meg.sa3'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+def frame_switch(css_selector):
+  browser.switch_to.frame(browser.find_element_by_css_selector(css_selector))
+
+frame_switch('html > frameset > frame:nth-child(2)')
+table = browser.find_element_by_xpath('/html/body/font/table[3]')
+df_lat = pd.read_html(table.get_attribute('outerHTML'))[0]
+
+lat_names = table_scraper('/html/body/font/table[1]')
+lat_party = lat_names.stack().reset_index()
+lat_party.columns = ['level_0', 'level_1', 'party']
+lat_party = lat_party['party'].str.split(' - ', expand=True)
+lat_party.drop([2], axis = 1, inplace = True)
+lat_party.dropna(inplace = True)
+lat_party[0] = lat_party[0].apply(pd.to_numeric)
+lat_party = lat_party.sort_values(0)
+
+lat_party.to_csv('lat_02_party.csv')
+df_lat.to_csv('lat_02.csv')
+
 
 ## italy
 url = 'https://elezionistorico.interno.gov.it/index.php?tpel=C&dtel=09/04/2006&es0=S&tpa=E&lev0=0&levsut0=0&ms=S&tpe=A'
