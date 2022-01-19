@@ -65,9 +65,36 @@ lat_06 = extra_cols(lat_06, 'Latvia', '2006-10-07', 'Legislative')
 #names here please 
 custom_dict$latvian <- tolower(countrycode::codelist$cldr.name.lv)
 custom_dict$latvian <- iconv(custom_dict$latvian, from = 'UTF-8', to = 'ASCII//TRANSLIT')
-countrycode(tolower(lat_06$country), 'latvian', 'english', custom_dict = custom_dict)
-# did not match a single country // 
-          
+lat_06$country = iconv(lat_06$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+
+lat_06$weird_1 = gsub("s republika", "", tolower(lat_06$country))
+lat_06$weird_1 = gsub("s karaliste", "", lat_06$weird_1)
+lat_06$weird = countrycode(lat_06$weird_1, 'latvian', 'english', custom_dict = custom_dict)
+latvian = "amerikas savienotajas valstis, australijas savieniba, brazilijas federativaja republika, izraelas valsti, kinas tauta, krievijas federacija, lielbritanijas un ziemelirijas apvienotaja karaliste, sveices konfederacija, vacijas federativaja republika, venecuelas bolivara republika"
+latvian = unlist(strsplit(latvian, ", "))
+english = c( "United States of America",
+            "Australia",
+             "Brazil",
+            "Israel",
+           "China",
+            "Russia",
+           "UK",
+            "Switzerland",
+            "Germany",
+           "Bolivarian Republic of Venezuela")
+
+
+
+for (i in 1:10){
+  lat_06$weird[tolower(lat_06$weird_1) == latvian[i]] = english[i]
+}
+
+lat_06$weird = countryname(lat_06$weird)
+lat_dic = lat_06[c(1,46)]
+lat_06$country = lat_06$weird
+lat_06 = lat_06[-c(46,47)]
+
+## problematic as I used test and thus countrynames don't match anymore 
 # lat 10: 
 
 lat_10 = read.csv('lat_leg_10.csv', encoding = 'UTF-8')
@@ -82,7 +109,30 @@ names(lat_10) <- gsub("[.]*$|[.]*(?=[.])", "",names(lat_10), perl = TRUE)
 names(lat_10) <- gsub("\\.", " ", names(lat_10))
 lat_10 = main_function(lat_10, 'PCTVL', 'Kristigi demokratiska savieniba', 3, 'VIENOTIBA')
 lat_10 = extra_cols(lat_10, 'Latvia', '2010-10-02', 'Legislative')
-#names missing
+lat_10$country = iconv(lat_10$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_10$weird = countrycode(lat_10$country, 'country', 'weird', custom_dict = lat_dic)
+latvian = "AUSTRALIJAS VALSTU SAVIENIBA, CILE, EGIPTES ARABU REPUBLIKA, GRUZIJA, IZRAELAS VALSTS, JAUNZELANDE, LUKSEMBURGAS LIELHERCOGISTE, PORTUGALE, UNGARIJAS REPUBLIKA, UZBEKISTANAS REPUBLIKA"
+latvian = unlist(strsplit(latvian, ", "))
+english = c("AUSTRALIA",
+            "CHILE",
+            "EGYPT",
+            "GEORGIA",
+            "ISRAEL",
+            "NEW ZEALAND",
+            "LUXEMBOURG",
+            "PORTUGAL",
+           "HUNGARY",
+            "UZBEKISTAN")
+
+
+for (i in 1:10){
+  lat_10$weird[lat_10$country == latvian[i]] = english[i]
+}
+
+lat_10$weird = countryname(lat_10$weird)
+lat_dic = lat_10[c(1,34)]
+lat_10$country = lat_10$weird
+lat_10 = lat_10[-34]
 # 2011
 lat_11 = read.csv('lat_leg_2011.csv', encoding = 'UTF-8')
 lat_11 = lat_11[-1]
@@ -96,7 +146,27 @@ names(lat_11) <- gsub("\\.", " ", names(lat_11))
 names(lat_11)[9] = 'LPP-LC'
 lat_11 = main_function(lat_11, 'VIENOTIBA', 'Briviba Brivs no bailem naida un dusmam', 5,  'Saskanas Centrs')
 lat_11 = extra_cols(lat_11, 'Latvia', '2011-09-17', 'Legislative')
+lat_11$country = iconv(lat_11$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_11$weird = countrycode(lat_11$country, 'country', 'weird', custom_dict = lat_dic)
+latvian = "AMERIKAS SAVIENOTAS VALSTIS, AZERBAIDZANAS REPUBLIKA, BRAZILIJAS FEDERATIVA REPUBLIKA, KAZAHSTANAS REPUBLIKA, LIELBRITANIJAS UN ZIEMELIRIJAS APVIENOTA KARALISTE, PORTUGALES REPUBLIKA, SLOVENIJAS REPUBLIKA, TURCIJAS REPUBLIKA, VACIJAS FEDERATIVA REPUBLIKA"
+latvian = unlist(strsplit(latvian, ", "))
+english = c("UNITED STATES",
+            "THE REPUBLIC OF AZERBAIJAN",
+           "BRAZIL",
+            "REPUBLIC OF KAZAKHSTAN",
+            "UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND",
+            "PORTUGAL",
+            "SLOVENIA",
+            "TURKEY",
+            "GERMANY")
 
+for (i in 1:9){
+  lat_11$weird[lat_11$country == latvian[i]] = english[i]
+}
+
+lat_dic = lat_11[c(1,36)]
+lat_11$country = countryname(lat_11$weird)
+lat_11 = lat_11[-36]
 #2014
 lat_14 = read.csv('lat_leg_14.csv', encoding = 'UTF-8')
 lat_party = read.csv('lat_14_dic.csv', encoding = 'UTF-8')
@@ -114,7 +184,25 @@ lat_names = lat_party[,3]
 names(lat_14)[4:16] = lat_names
 lat_14 = main_function(lat_14, 'Latvijas attistibai', 'No sirds Latvijai', 4, 'Saskana socialdemokratiska partija')
 lat_14 = extra_cols(lat_14, 'Latvia', '2014-10-04', 'Legislative')
+lat_14$country =  iconv(lat_14$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+lat_14$weird = countrycode(lat_14$country, 'country', 'weird', custom_dict = lat_dic)
+latvian = "APVIENOTIE ARABU EMIRATI, CILE, INDIJAS REPUBLIKA, ISLANDES REPUBLIKA, KARAVIRI UN ZEMESSARGI STARPTAUTISKA OPERACIJA AFGANISTANA, KARAVIRI UN ZEMESSARGI? STARPTAUTISKA OPERACIJA CENTRALAFRIKA, UNGARIJA"
+latvian = unlist(strsplit(latvian, ", "))
+english = c("UNITED ARAB EMIRATES",
+            "CHILE",
+            "INDIA",
+            "ICELAND",
+            "MILITARY Base Afghanistan",
+            "MILITARY BASE CENTRAL AFRICA",
+            "HUNGARY")
 
+for (i in 1:7){
+  lat_14$weird[lat_14$country == latvian[i]] = english[i]
+}
+lat_14$country = countryname(lat_14$weird)
+lat_14$country[23:24] = c("MB Afghanistan", "MB Central Africa")
+# MB for military basis
+lat_14 = lat_14[-35]
 
 ##Legislative 2018
 lat_18 = read_xlsx("Latvia/leg_2018/Latvia Leg. 2018 abroad raw data.xlsx")
@@ -238,6 +326,19 @@ names(pol_15)[5:14] <- gsub("[.]*$|[.]*(?=[.])", "",names(pol_15)[5:14], perl = 
 names(pol_15)[5:14] <- gsub("\\.", " ", names(pol_15)[5:14])
 pol_15 = main_function(pol_15, 'Prawo i Sprawiedliwosc', 'Ruch Spoleczny Rzeczypospolitej Polskiej', 5, 'Prawo i Sprawiedliwosc')
 pol_15 = extra_cols(pol_15, 'Poland', '2015-10-25', 'Legislative')
+pol_15$country = iconv(pol_15$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+# not using a dictionary now that was created with the translation of legislative 2019 country names below!
+pol_15$weird = countrycode(pol_15$country, 'country', 'weird', custom_dict = pol_dic)
+polish = "Boliwarianska Republika Wenezueli, Republika Irlandii, Republika Kosowa, Republika Macedonii, Zjednoczone Emiraty Arabskie"
+polish = unlist(strsplit(polish, ", "))
+english = c('Venezuela', 'Ireland', 'Kosovo', 'Republic of Macedonia', 'United Arab Emirates')
+for (i in 1:5){
+  pol_15$weird[pol_15$country == polish[i]] = english[i]
+}
+pol_15$weird = countryname(pol_15$weird)
+new_dic = pol_15[c(1,30)]
+pol_15$country = pol_15$weird
+pol_15 = pol_15[-30]
 # names missing
 
 
@@ -268,14 +369,104 @@ names(pol_19)[6:10] <- c("KOALICJA OBYWATELSKA", "KONFEDERACJA WOLNOSC I NIEPODL
 pol_19 = main_function(pol_19, "KOALICJA OBYWATELSKA", "SOJUSZ LEWICY DEMOKRATYCZNEJ", 6, "PRAWO I SPRAWIEDLIWOSC")
 pol_19 = extra_cols(pol_19, "Poland", "2019-10-13", "Legislative")
 pol_19$country = iconv(pol_19$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
-# makes no sense
-pol_19$weird = gsub("Krolestwo ", "", pol_19$country)
-pol_19$weird = gsub("koreanska")
-pol_19$weird = countrycode(tolower(pol_19$country), 'polish', 'english', custom_dict = custom_dict)
-polish = c(pol_19$country[is.na(pol_19$weird)])
-## also not working // leave that polish election for last 
-paste(polish, collapse = " ", sep = ",")
 
+for (i in pol_19$country){
+  print(i)
+}
+english = c("Algeria",
+            "Arab Republic of Egypt",
+ "Bosnia and Herzegovina",
+ "People's Republic of China",
+ "Montenegro",
+ "Russian Federation",
+ "Federative Republic of Brazil",
+ "Federal Democratic Republic of Ethiopia",
+ "Federal Republic of Nigeria",
+ "Georgia",
+ "Ireland",
+ "Islamic Republic of Iran",
+ "Islamic Republic of Pakistan",
+ "Japan",
+ "Jordanian Hashemite Kingdom",
+ "Canada",
+ "Swiss Confederation",
+ "Korean People's Democratic Republic",
+ "Kingdom of Saudi Arabia",
+ "Kingdom of Belgium",
+ "Kingdom of Denmark",
+ "Kingdom of Spain",
+ "Morocco",
+ "Kingdom of the Netherlands",
+ "The Kingdom of Norway",
+ "Kingdom of Sweden",
+ "Kingdom of Thailand",
+ "Malaysia",
+ "Mexico",
+ "Taipei City",
+ "New Zealand",
+ "The State of Israel",
+ "State of Qatar",
+ "State of Kuwait",
+ "State of the United Arab Emirates",
+ "Republic of Albania",
+ "Republic of Angola",
+ "Argentine Republic",
+ "Republic of Armenia",
+ "Republic of Austria",
+ "Republic of Azerbaijan",
+ "Republic of Belarus",
+ "Republic of Bulgaria",
+ "Republic of Chile",
+ "Republic of Croatia",
+ "Republic of Cyprus",
+ "Czech Republic",
+ "Republic of Estonia",
+ "Federal Republic of Germany",
+ "Republic of the Philippines",
+ "Republic of Finland",
+ "French Republic",
+ "Hellenic Republic",
+ "Republic of India",
+ "Republic of Indonesia",
+ "Republic of Iceland",
+ "Republic of Kazakhstan",
+ "Republic of Kenya",
+ "Republic of Colombia",
+ "Republic of Korea",
+ "Republic of Cuba",
+ "Republic of Lebanon",
+ "Republic of Lithuania",
+ "Republic of Latvia",
+ "Republic of North Macedonia",
+ "Republic of Malta",
+ "Republic of Moldova",
+ "Republic of Panama",
+ "Republic of Peru",
+ "South Africa",
+ "Portugal",
+ "Republic of Senegal",
+ "Republic of Serbia",
+ "Republic of Singapore",
+ "Slovak Republic",
+ "Republic of Slovenia",
+ "Republic of Tunisia",
+ "Republic of Turkey",
+ "Republic of Uzbekistan",
+ "Italy",
+ "Romania",
+ "Socialist Republic of Vietnam",
+ "United States of America",
+ "Ukraine",
+ "Hungary",
+ "Grand Duchy of Luxembourg",
+ "United Republic of Tanzania",
+"United Kingdom of Great Britain and Northern Ireland",
+ "Australian Union")
+
+pol_19$weird = countryname(english)
+pol_dic = pol_19[c(1,21)]
+pol_19$country = pol_19$weird
+pol_19 = pol_19[-21]
 # Presidential 2000
 polp_00 = read_xls("Poland/pol_2000/Poland Pres. 2000.xls")
 names(polp_00)[c(1,3,5:7)] <- c("country", "registered_voters", "total_votes", "null_votes", "valid_votes")
@@ -356,7 +547,10 @@ polp_15 = aggregate(c(polp_15[1:15]), by = polp_15[16], sum)
 names(polp_15)[6:16] = iconv(name, from = 'UTF-8', to = 'ASCII//TRANSLIT')
 polp_15 = main_function(polp_15, "Grzegorz Michal Braun", "Jacek Wilk", 6, "Andrzej Sebastian Duda")
 polp_15 = extra_cols(polp_15, "Poland", "2015-05-10","Presidential")
+polp_15$country = iconv(polp_15$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
 
+polp_15$country = countrycode(polp_15$country, 'country', 'weird', custom_dict = new_dic)
+polp_15$country[is.na(polp_15$country)] = "Iraq"
 #### Czechia ===================================================================
 ##Presidential 2013
 czp_13 = read.csv("Czechia/pres_2013/result (5).csv")
@@ -491,7 +685,27 @@ ind_19 = add_column(ind_19, valid_votes = rowSums(ind_19[2:17]), .after = 'count
 ind_19 = main_function(ind_19, 'PKB', 'PKPI', 3, 'PDIP')
 ind_19 = extra_cols(ind_19, 'Indonesia', '2019-04-17', 'Legislative')
 # country missing // 
-#Presidential 2019
+ind_19$country = trimws(ind_19$country)
+custom_dict$indonesian = tolower(countrycode::codelist$cldr.name.id)
+ind_19$weird = countrycode(tolower(ind_19$country), 'indonesian', 'english', custom_dict = custom_dict)
+
+indonesian = "brunei darussalam, chile, ethiopia, hongaria, inggris, kazakhstan, libya, mexico, morocco, myanmar, perancis, republik ceko, republik rakyat tiongkok, sabah, slowakia, sri langka, ukrania"
+indonesian = unlist(strsplit(indonesian, ", "))
+english = "Brunei Darussalam, Chile, Ethiopia, Hungary, United Kingdom, Kazakhstan, Libya, Mexico, Morocco, Myanmar, France, Czech Republic, People's Republic of China, Sabah, Slovakia, Sri Lanka, Ukraine"
+english = unlist(strsplit(english, ", "))
+
+for (i in 1:17){
+  ind_19$weird[tolower(ind_19$country) == indonesian[i]] = english[i]
+}
+
+ind_19$weird = countryname(ind_19$weird)
+# not matched Sabah (whatever that is)
+ind_dic = ind_19[c(1,40)]
+ind_19$country = ind_19$weird
+ind_19$country[is.na(ind_19$country)] = "Sabah (?)"
+ind_19 = ind_19[-c(40)]
+
+# Presidential 2019
 indp_19 = read.csv('indo_pres_19.csv')
 indp_19$WILAYAH =  gsub("\\(.*", "", indp_19$WILAYAH)
 indp_19$WILAYAH = trimws(indp_19$WILAYAH)
@@ -503,7 +717,18 @@ indp_19 = aggregate(c(indp_19[2:3]), by = indp_19[1], sum)
 indp_19 = add_column(indp_19, valid_votes = rowSums(indp_19[2:3]), .after = 'country')
 indp_19 = main_function(indp_19, 'PDIP', 'Gerindra', 3, 'PDIP')
 indp_19 = extra_cols(indp_19, 'Indonesia', '2019-04-17', 'Presidential')
-#names missing // 
+
+indp_19$weird = countrycode(trimws(indp_19$country), 'country', 'weird', custom_dict = ind_dic)
+indonesian = " Bosnia-Herzegovina, Kroasia, Kuba, Madagaskar, Sabah, Suriah, Zimbabwe"
+indonesian = unlist(strsplit(indonesian, ", "))
+english = c("Bosnia", "Croatia", "Cuba", "Madagascar", "Sabah", "Syria", "Zimbabwe")
+for (i in 1:7){
+  indp_19$weird[trimws(indp_19$country) == indonesian[i]] = english[i]
+}
+
+indp_19$country = countryname(indp_19$weird)
+indp_19 = indp_19[-12]
+# again Sabah not matched // 
 ### Ecuador:--------------------------------------------------------------------
 # Legislative 2009
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Leg. 2009 National MPs")
@@ -558,6 +783,7 @@ for (i in 1:14){
 
 ec_09$country = countryname(ec_09$weird)
 ec_09 = ec_09[-46]
+names(ec_09)[5:7] = c('valid_votes', 'blanco_votes', 'null_votes')
 
 
 ## Legislative 2013
@@ -729,8 +955,35 @@ names(mol_14)[5:29] = gsub("[.]*$|[.]*(?=[.])", "",names(mol_14)[5:29], perl = T
 names(mol_14)[5:29] <- gsub("\\.", " ", names(mol_14)[5:29])
 mol_14 = main_function(mol_14, "Partidul Democrat din Moldova", "Partidul Politic Pentru Neam si Tara", 6, "Partidul Politic Partidul Socialistilor din Republica Moldova")
 mol_14 = extra_cols(mol_14, 'Moldova', "2014-11-30", 'Legislative')
-custom_dict$romanian #names problematic 
 
+mol_14$weird_2 = trimws(gsub('republica', "", tolower(mol_14$country)))
+mol_14$weird = countrycode(mol_14$weird_2, 'romanian', 'english', custom_dict = custom_dict)
+romanian = "ceha, confederatia elvetiana, elena, federala germania, federatia rusa, franceza, italiana, populara chineza, portugheza, principatul monaco, regatul belgiei, regatul spaniei, regatul suediei, regatul unit al marii britaniei ?i irlandei de nord, statul israel, statul qatar, tarile de jos"
+romanian = unlist(strsplit(romanian, ", "))
+english = c("Czechia",
+            "Swiss Confederation",
+            "Greece", 
+            "Germany",
+            "Russian Federation",
+            "France",
+            "italy", 
+            "China",
+            "Portugal",
+            "Monaco",
+            "Belgium",
+            "Spain",
+            "Sweden",
+            "UK",
+            "Israel",
+            "Qatar",
+            "Netherlands")
+
+for (i in 1:17){
+  mol_14$weird[mol_14$weird_2 == romanian[i]] = english[i]
+}
+
+mol_14$country = countryname(mol_14$weird)
+mol_14 = mol_14[-c(61,62)]
 
 # Presidential 2016
 mol_16 = read_xlsx("Moldova/pres_2016/1stRound. finalallt1prez20175034720_6383668.xlsx", sheet = 2)
@@ -771,6 +1024,41 @@ mol_16 = mol_16[-31]
 
 
 ## Legislative 2019
+paths = c("Moldova/Raw/Circumscription 49 Proportional Republica Moldova.xlsx", 
+          "Moldova/Raw/Circumscription 50 Proportional Republica Moldova.xlsx",
+          "Moldova/Raw/Circumscription 51 Proportional Republica Moldova.xlsx")
+
+df_list = lapply(paths, read_xlsx, skip = 5)
+
+df_list[[3]] = df_list[[3]][-28]
+df_list[[2]] = df_list[[2]][-c(1:2),]
+df_list[[1]] = df_list[[1]][-1,]
+df_list[[3]] = df_list[[3]][-c(1:5),]
+df_list[[1]] = add_column(df_list[[1]], country = NA, .after = "Sectia de votare")
+for (i in 2:3){
+  names(df_list[[i]])[3] = "country"
+}
+
+mol_19 = do.call(rbind, df_list)
+mol_19$country[1:27] = c("Azerbaijan", 'Belarus', 'Belarus', 'China', "United Arab Emirates",
+                         "Georgia", 'Israel', 'Israel', 'Japan', 'Qatar', 'Russia', 'Russia', 'Russia',
+                         'Russia', 'Russia', 'Russia', 'Russia', 'Russia', 'Russia', 'Russia', 'Russia', 
+                         'Turkey', 'Turkey', 'Turkey', 'Ukraine', 'Ukraine', 'Ukraine')
+
+mol_19 = mol_19[-c(1:2)]
+# forgot something // 
+mol_19 = mol_19[-c(2:3, 6,24,25)]
+names(mol_19)[2:5] = c('registered_voters', 'total_votes', 'invalid_votes', 'valid_votes')
+mol_19[2:20] = lapply(mol_19[2:20], function(y) as.numeric(y))
+mol_names = names(mol_19)
+
+mol_19 = aggregate(c(mol_19[2:20]), by = mol_19[1], sum)
+mol_names = iconv(mol_names, from = 'UTF-8', to =  'ASCII//TRANSLIT')
+mol_names = gsub("\"", "", mol_names)
+names(mol_19) = mol_names
+mol_19 = main_function(mol_19, "Partidul Democrat din Moldova", "Partidul Liberal", 6, "Partidul Politic Partidul Socialistilor din Republica Moldova")
+mol_19 = extra_cols(mol_19, "Moldova", "2019-02-24", 'Legislative')
+mol_19$country = countryname(mol_19$country)
 
 
 #### Paraguay =================================================================
@@ -831,6 +1119,18 @@ parl_18$country = c("Argentina", "Brazil", "US", "Spain")
 
 
 
+#### Binding everything together ===============================================
+# Choosing the df with most columns to start the binding process
+parl_18 = add_column(parl_18, registered_voters = NA, .after = 'election_type')
+parl_18 = add_column(parl_18, invalid_votes = NA, .after = 'valid_votes')
+batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cro, 
+                    ecp_13, ecp_09, ecp_06, ec_13, ec_09, indp_19, ind_19, cz_10, cz_06,
+                    czp_18, czp_13, polp_15, polp_10, polp_05, polp_00, pol_19, pol_15, 
+                    pol_11, pol_07, pol_01, lat_18, lat_14, lat_11, lat_10, lat_06, lat_02)
 
-
-
+# there are two columns total_voters and correct_votes(last two) where I was unsure
+# about the meaning 
+names(batch_3)[1] <- 'country_of_residence' 
+batch_3 = add_column(batch_3, cor_iso3 = countrycode(batch_3$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles
+write.csv(batch_3,"batch_3.csv", row.names = FALSE)
