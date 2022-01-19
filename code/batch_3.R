@@ -1132,5 +1132,5 @@ batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cr
 # about the meaning 
 names(batch_3)[1] <- 'country_of_residence' 
 batch_3 = add_column(batch_3, cor_iso3 = countrycode(batch_3$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
-# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles
+# Problems here for several countries -> either military base or non existent or old countries with no Iso3c or so
 write.csv(batch_3,"batch_3.csv", row.names = FALSE)
