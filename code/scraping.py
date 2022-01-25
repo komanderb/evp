@@ -330,3 +330,152 @@ for df in italy_list:
     
 df_italy = pd.concat(italy_list, ignore_index=True, sort=False)
 df_italy.to_csv('italy_2006.csv')
+
+
+## Romania:: 
+#Presidential 2004
+
+url = 'http://alegeri.roaep.ro/?alegeri=prezidentiale-2004'
+
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+
+
+selector = browser.find_element_by_xpath('//*[@id="selLocalitate"]')
+list_selection = selector.find_elements_by_tag_name('option')
+
+
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from time import sleep
+def best_romanian_scraper(start, end):
+    df_list_1 = []
+    df_list_2 = []
+    for i in (range(start, end)):
+       # browser.implicitly_wait(5)
+        #WebDriverWait(list_selection, timeout=3).until(EC.element_to_be_clickable(list_selection[i]))
+        browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+        sleep(1)
+        #browser.implicitly_wait(5)
+        selector = browser.find_element_by_xpath('//*[@id="selLocalitate"]')
+        #list_selection = 
+        selector.find_elements_by_tag_name('option')[i].click()
+        sleep(1)
+        #list_selection[i].click()
+        #table_1 = browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[2]/table')
+        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[2]/table').get_attribute('outerHTML'))[0]
+        #df_1 = pd.read_html(table_1.get_attribute('outerHTML'))[0]
+        df_1.insert(0, 'pol_stat', selector.find_elements_by_tag_name('option')[i].text)
+        #table_2 = browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[3]/table')
+        df_2= pd.read_html(browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[3]/table').get_attribute('outerHTML'))[0]
+        #df_2= pd.read_html(table_2.get_attribute('outerHTML'))[0]
+        df_2.insert(0, 'pol_stat', selector.find_elements_by_tag_name('option')[i].text)
+        df_list_1.append(df_1)
+        df_list_2.append(df_2)
+        sleep(1)   
+        #browser.refresh()
+        
+    
+    df_1 = pd.concat(df_list_1, ignore_index=True, sort=False)
+    df_2 =  pd.concat(df_list_2, ignore_index=True, sort=False)
+    return(df_1, df_2)
+        
+
+df_general, df_votes = best_romanian_scraper(1,151)
+  # it's 153 and pretty sure I used that but double check
+
+browser.close()
+
+
+df_general.to_csv('ro_pres_04_general.csv')
+df_votes.to_csv('ro_pres_04_votes.csv')
+## Romania presidential 2000
+
+url = 'http://alegeri.roaep.ro/?alegeri=prezidentiale-2000'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+df_general, df_votes = best_romanian_scraper(1,151)
+
+df_general.to_csv('ro_pres_00_general.csv')
+df_votes.to_csv('ro_pres_00_votes.csv')
+
+## Legislative elections / 
+
+url = 'http://alegeri.roaep.ro/?alegeri=alegeri-parlamentul-romaniei-2000'
+
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+browser.find_element_by_xpath('//*[@id="selTip"]/option[3]').click()
+browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+# have to redefine the function a little bit as there is only one round and thus position 
+# of tables is defined differently
+
+def best_romanian_scraper(start, end):
+    df_list_1 = []
+    df_list_2 = []
+    for i in (range(start, end)):
+       # browser.implicitly_wait(5)
+        #WebDriverWait(list_selection, timeout=3).until(EC.element_to_be_clickable(list_selection[i]))
+        browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+        sleep(1)
+        #browser.implicitly_wait(5)
+        selector = browser.find_element_by_xpath('//*[@id="selLocalitate"]')
+        #list_selection = 
+        selector.find_elements_by_tag_name('option')[i].click()
+        sleep(1)
+        #list_selection[i].click()
+        #table_1 = browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[2]/table')
+        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[3]/div[4]/div[1]/div/table').get_attribute('outerHTML'))[0]
+        #df_1 = pd.read_html(table_1.get_attribute('outerHTML'))[0]
+        df_1.insert(0, 'pol_stat', selector.find_elements_by_tag_name('option')[i].text)
+        #table_2 = browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[2]/div[4]/div[1]/div[3]/table')
+        df_2= pd.read_html(browser.find_element_by_xpath('//*[@id="vizualizareRezultate"]/div[3]/div[4]/div[2]/div/table').get_attribute('outerHTML'))[0]
+        #df_2= pd.read_html(table_2.get_attribute('outerHTML'))[0]
+        df_2.insert(0, 'pol_stat', selector.find_elements_by_tag_name('option')[i].text)
+        df_list_1.append(df_1)
+        df_list_2.append(df_2)
+        sleep(1)   
+        #browser.refresh()
+       
+    
+    df_1 = pd.concat(df_list_1, ignore_index=True, sort=False)
+    df_2 =  pd.concat(df_list_2, ignore_index=True, sort=False)
+    return(df_1, df_2)
+
+df_general, df_votes = best_romanian_scraper(1,151)
+browser.close()
+df_general.to_csv('ro_leg_00_general.csv')
+df_votes.to_csv('ro_leg_00_votes.csv')
+
+## 2004
+
+url = 'http://alegeri.roaep.ro/?alegeri=alegeri-parlamentul-romaniei-2004'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+browser.find_element_by_xpath('//*[@id="selTip"]/option[3]').click()
+browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+
+df_general, df_votes = best_romanian_scraper(1, 153)
+browser.close()
+df_general.to_csv('ro_leg_04_general.csv')
+df_votes.to_csv('ro_leg_04_votes.csv')
+
+## 2008 -> no country names only the other stuff // 
+url = 'http://alegeri.roaep.ro/?alegeri=test-parlamentare'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+browser.find_element_by_xpath('//*[@id="selTip"]/option[3]').click()
+browser.find_element_by_xpath('//*[@id="selJudet"]/option[37]').click()
+
+df_general, df_votes = best_romanian_scraper(1, 203)
+browser.close()
+df_general.to_csv('ro_leg_08_general.csv')
+df_votes.to_csv('ro_leg_08_votes.csv')
