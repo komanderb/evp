@@ -91,3 +91,7 @@ file = r"Colombia\leg_02\Antilas Holondesas.pdf"
 tables = camelot.read_pdf(file, page = '1', line_scale = 40, process_background = True)
 
 # also not working // 
+file = r"Colombia\leg_06\Argentina.pdf"
+tables = camelot.read_pdf(file)
+df = tables[0].df
+# thats'working but the last column is just very weird // 
