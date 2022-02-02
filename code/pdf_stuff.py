@@ -5,7 +5,7 @@ Created on Thu Dec 30 11:37:54 2021
 @author: lenovo
 """
 #!pip install matplotlib
-import matplotlib
+#import matplotlib
 import camelot
 import os
 import pandas as pd
@@ -93,5 +93,19 @@ tables = camelot.read_pdf(file, page = '1', line_scale = 40, process_background 
 # also not working // 
 file = r"Colombia\leg_06\Argentina.pdf"
 tables = camelot.read_pdf(file)
-df = tables[0].df
+for counter, table in enumerate(tables):
+    df = tables[counter].df
 # thats'working but the last column is just very weird // 
+path = r"C:\Users\lenovo\Documents\BSE\RA\Data\Data\EVP\Colombia\leg_06\Source Files"
+os.chdir(path)
+from os import listdir
+listdir(path)
+
+file = "Malaysia.pdf"
+tables = camelot.read_pdf(file)
+"""
+Problematic, as every other pdf is different -> sometimes not properly read
+a bit lost here
+"""
+
+
