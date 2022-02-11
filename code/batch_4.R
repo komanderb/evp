@@ -622,22 +622,43 @@ cz_codes = read_xlsx("Czechia/ps2002_zahranici (1)/ps2002_rzvo.xlsx")
 cz_codes = cz_codes[c(2,12)]
 cz_02 = left_join(cz_02, cz_codes)
 # we might have a problem here -> as I don't get what is what // 
-cz_02 = cz_02[]
+# okay now we have what we want: drop all the hlasy#
+# also general informatin on votes is not4 available in the excel but on the website //
+
+cz_02 = cz_02[-c(11:46)]
+#drop all the other columns // 
+
+cz_02 = cz_02[-c(1:5, 10:14)]
+#forgot one
+cz_02 = cz_02[-2]
+
+cz_02 = cz_02 %>% pivot_wider(names_from = KSTRANA, values_from = POC_HLASU, values_fill = 0)
+
+cz_02 = aggregate(c(cz_02[3:25]), by = cz_02[2], sum)
+cz_02 = renamer(cz_02,1)
+cz_02 = add_column(cz_02, valid_votes = rowSums(cz_02[2:24]), .after = "country")
+names(cz_02) = gsub("X", "", names(cz_02))
+view(cz_parties)
+cz_parties = cz_parties[c(1,6)]
+# just gonna use party abbreviation //
+cz_parties$ZKRATKAK8 = iconv(cz_parties$ZKRATKAK8, from = "UTF-8", to = 'ASCII//TRANSLIT')
+names(cz_parties) = c('KSTRANA', 'party')
+names(cz_02)[3:25] = countrycode(as.numeric(names(cz_02)[3:25]), 'KSTRANA', 'party', custom_dict = cz_parties) 
+cz_02 = main_function(cz_02, "CSSD", "VPB", 3, "CSSD")
+cz_02 = extra_cols(cz_02, "Czechia", "2002-06-14", "Legislative")
+cz_02$country = countryname(cz_02$country)
+#### merging -------------------------------------------------------------------
+## adding columns for symmetry
+ro_leg_00 = add_column(ro_leg_00, registered_voters = NA, .after = 'election_type')
+ro_leg_00 = add_column(ro_leg_00, blanco_votes = NA, .after = 'null_votes')
+ro_leg_00 = add_column(ro_leg_00, invalid_votes = NA, .after = 'blanco_votes')
+
+batch_4 = bind_rows(ro_leg_00, bo_19, ind_14, ro_leg_04, ro_pres00, ro_pres04,
+                    ro_leg08, ro_16, rol16, buleg_13, buleg_09, col_10)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+write.csv(batch_4, 'batch_4.csv', row.names = F)
 
 
 
