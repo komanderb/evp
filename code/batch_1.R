@@ -20,6 +20,7 @@ install.packages('XML')
 install.packages('xml2')
 install.packages("htmltab")
 install.packages('RSelenium')
+install.packages('googleLanguageR')
 # loading 
 library(countrycode)
 library(plyr)
@@ -38,6 +39,7 @@ library(XML)
 library(rvest)
 library(htmltab)
 library(RSelenium)
+library(googleLanguageR)
 #library(purr)
 ### Setting working directory =================================================
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
@@ -199,12 +201,78 @@ for (i in c(dic_1, dic_2, dic_3, dic_4,
   assign(i, pivot_longer(i, everything()))
   df_dic = bind_rows(df_dic, i)
 }
-pivot_longer(dic_list, everything())
-dic_list
-# not working
 
-## France Legislative 2017 
-#missing // just realized that
+
+file = "C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/France/Leg. 2012/france_leg_12_mod.xlsx"
+sheets = c(1:11)
+df_list = lapply(sheets, function(y) read_xlsx(file, sheet = y))
+
+for (i in seq_along(df_list)){
+  df_list[[i]] = row_to_names(df_list[[i]], nrow(df_list[[i]]))
+}
+# thats just stupid // 
+
+## France Legislative 2017
+#the file was damaged so had to take a longer approach
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/France/Leg. 2017/ordered_files")
+my_files = list.files(pattern = "\\.xlsx$")
+df_list <- lapply(my_files, read_xlsx)
+for (i in seq_along(df_list)){
+  keeper = grep("- TOTAL", names(df_list[[i]]))
+  df_list[[i]] = df_list[[i]][c(1:16, keeper)]
+  bye = grep("%", names(df_list[[i]]))
+  df_list[[i]] = df_list[[i]][-c(bye)]
+  
+}
+
+for (i in seq_along(df_list)){
+  df_list[[i]] = df_list[[i]] %>% filter(!(Pays == "Total général"))
+}
+
+exclude = names(df_list[[5]])[1:14]
+for (i in seq_along(df_list)){
+  df_list[[i]] = df_list[[i]] %>% pivot_longer(cols = -exclude, names_to = "party", values_to = "votes")
+}
+
+fr_17 =  do.call(rbind, df_list)
+fr_17$party = gsub(" - TOTAL", "", fr_17$party)
+
+# now the most important part is the party dictionary
+
+fr17_dic = read_xlsx("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/France/Leg. 2017/party_dictionary.xlsx")
+
+# using countrycode function as this yields very clean translation for every sort dictionary 
+fr_17$weird = countrycode(fr_17$party, "Liste candidats", "PARTY", custom_dict = fr17_dic)
+names = "M. Charles-Henry CHENUT, M. François RALLE-ANDREOLI, M. Joachim SON-FORGET, M. Vincent BOILEAU-AUTIN, M. Yves-Eric MASSIANI, Mme Anna DEPARNAY-GRUNENBERG, Mme Christine AGATHON-BURTON, Mme Daphna POZNANSKI-BENHAMOU, Mme Laurence AZZENA-GOUGEON, Mme Nadia BOURGEOIS-CHEBAH, Mme Nicole FINAS-FILLON, Mme Odile LEPERRE-VERRIER"
+names = unlist(str_split(names, ", "))
+parties = c("UDI", "FI", "REM", "DVG", "DIV", "ECO", "DIV", "DIV", "LR", "ECO", "DIV", "RDG")
+for (i in seq_along(names)){
+  fr_17$weird[fr_17$party == names[i]] = parties[i]
+}
+
+
+fr_17$party = fr_17$weird
+# now get rid of annoying columns //
+fr_17 = fr_17[-c(3,4,6,7,9,10,12,13,17)]
+fr_17 =  fr_17 %>% pivot_wider(names_from = party, values_from = votes, values_fn = sum, values_fill = 0)
+names(fr_17)[1:6] = c('country', 'registered_voters', 'total_votes', 'null_votes', 'blanco_votes', 'valid_votes')
+
+fr_17 = main_function(fr_17, "REM", "DLF", 7, "REM")
+fr_17 = extra_cols(fr_17,"France", "2017-06-11", "Legislative")
+
+fr_17$weird = countrycode(tolower(fr_17$country), 'french', 'english', custom_dict = custom_dict)
+french = unlist(str_split("ancienne république yougoslave de macédoine (arym), benin, birmanie (myanmar), centrafricaine (république), congo, congo (république démocratique), côte d'ivoire, dominicaine (république), equateur, hong-kong, jérusalem, ouzbekistan, tchèque (république), turkmenistan, yemen", ", "))
+english = c("North Macedonia", "Benin", "Myanmar", "Central African Republic",
+            "Congo - Brazzaville", "Congo - Kinshasa", "Côte d’Ivoire", "Dominican Republic", 
+            "Ecuador", "Hong Kong", "Palestine", "Uzbekistan", "Czechia", "Turkmenistan",
+            "Yemen")   #jerusalem translated as palestine as Israel already existing
+
+for (i in seq_along(french)){
+  fr_17$weird[tolower(fr_17$country) == french[i]] = english[i]
+}
+
+fr_17$country = countryname(fr_17$weird)
+fr_17 = fr_17[-46]
 ##Romania======================================================================
 ## Presidential 2009
 RoPres_09 <- read_xls("Romania/Pres. 2009 Romania/Source Files/1st Round/Romania Pres. 2009 1st Round (All Polling Stations).xls")
