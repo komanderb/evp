@@ -1,5 +1,5 @@
 ### batch 4
-
+install.packages('maps')
 ### Loading packages------------------------------------------------------------
 library(countrycode)
 library(plyr)
@@ -16,7 +16,9 @@ library(stringr)
 library(xml2)
 library(XML)
 library(rvest)
+library(maps)
 library(uchardet)
+library(ggmap)
 # Setting working directory 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
 #### Bolvia ====================================================================
@@ -91,7 +93,7 @@ ind_14 = add_column(ind_14, valid_votes = rowSums(ind_14[2:3]), .after = 'countr
 ind_14 = main_function(ind_14, "Prabowo Subianto", "Joko Widodo", 3, "Joko Widodo")
 ind_14 = extra_cols(ind_14, 'Indonesia', '2014-07-09', 'Presidential')
 
-## Romania -------------------------------------------------------------------#
+##### Romania ==================================================================
 
 #ro_leg_00 = read.csv('ro_leg_00_votes.csv', encoding = 'UTF-8')
 
@@ -223,9 +225,21 @@ names_ro
 
 ro_leg_04 = main_function(ro_leg_04,  "D.A. PNL-PD", "AC-MACEDONENI", 5, "PSD+PUR")
 ro_leg_04 = extra_cols(ro_leg_04, 'Romania', '2004-11-28', 'Legislative')
-countrycode(tolower(ro_leg_04$country), 'romanian', 'english', custom_dict = custom_dict)
-# too many unknown names // 
-# can't be asked 
+ro_leg_04$weird = countrycode(tolower(ro_leg_04$country), 'romanian', 'english', custom_dict = custom_dict)
+romanian = "anglia, bosnia, bosnia si hertegovina, confederatia elvetiana, federatia rusa, kuwait, macedonia, malaezia, marea britanie, r.a. egipt, r.f.germana, r.f.nigeria, r.i.iran, r.p.d. coreeana, r.s.vietnam, regatul arabiei saudite, regatul belgiei, regatul danemarcei, regatul tarilor de jos, rep.indonezia, republica africa de sud, republica algeriana, republica angola, republica argentina, republica armenia, republica austria, republica azerbaidjan, republica belarus, republica bulgaria, republica ceha, republica chile, republica cipru, republica columbia, republica coreea, republica croatia, republica cuba, republica elena, republica filipine, republica finlanda, republica franceza, republica georgia, republica india, republica irak, republica irlanda, republica italiana, republica libaneza, republica populara chineza, serbia si muntenegru, sua, uzbeckistan"
+romanian = unlist(str_split(romanian, ", "))
+write.table(as.data.frame(romanian), file = "ro_04_countries.txt", sep = "\t", row.names = F, col.names = F)
+#reload translated names //
+another_dic = read.delim("ro_04_countries.txt", sep = "\t", header = F)
+english = another_dic$V1
+
+for (i in seq_along(romanian)){
+  ro_leg_04$weird[tolower(ro_leg_04$country) == romanian[i]] = english[i]
+}
+# save as I will need this for presidential
+another_dic = ro_leg_04[c(1,108)]
+ro_leg_04$country = countryname(ro_leg_04$weird)
+ro_leg_04 = ro_leg_04[-108]
 
 ## Presidential 2000
 ro_pres00 = left_join(df_list[[4]], df_list_2[[4]])
@@ -271,7 +285,9 @@ names_ro
 
 ro_pres04 = main_function(ro_pres04, "TRAIAN BASESCU", "AUREL RADULESCU", 5, "ADRIAN NASTASE")
 ro_pres04 = extra_cols(ro_pres04, 'Romania', '2004-11-28', 'Presidential')
-#names missing 
+ro_pres04$weird = countrycode(ro_pres04$country, 'country', 'weird', custom_dict = another_dic)
+ro_pres04$country = countryname(ro_pres04$weird)
+ro_pres04 = ro_pres04[-34]
 
 #Legislative 2008
 ro_leg08 = left_join(df_list[[3]], df_list_2[[3]])
@@ -282,11 +298,56 @@ ro_dic[1:2] = tolower(ro_dic[1:2])
 
 countrycode(toupper(ro_leg08$pol_stat), 'city', 'country', custom_dict = ro_dic)
 ro_dic = ro_dic %>% filter(!(duplicated(city)))
-# also not doing that // 
+ro_leg08$pol_stat
+# tried a few things, here is a new approach //
+geocode(ro_leg08$pol_stat, output = 'more')$country
+data(world.cities)
+try = world.cities %>% filter(pop  > 100000)
+try = try %>% filter(!duplicated(name))
+ro_leg08$weird = countrycode(ro_leg08$pol_stat, 'name', 'country.etc', custom_dict = try)
+
+# this is also not really working because some countries are in english while others are in romanian //
+ro_dic = ro_leg08[c(1,30)]
+ro_dic = ro_dic %>% filter(!is.na(weird))
+
+romania = 'Alcazar de San Juan, Algarve, Alger, Alicante, Amman, Anvers, Ashgabat, Atena, Bagdad, Beirut, Belfast-Ballymena, Belgrad, Berna, Bruxelles, Budapesta, Carolina de Nord, Castellon de la Plan, Cernauti, Ciudad Real, Copenhaga, Cosalda, Damasc, Djakarta, Erevan, Florenta, Genova, Gyula, Haga, Hanoi, Havana, Hong Kong, Ieraklio, Ierusalim, Kuweit, Larose, Limassol, Lisabona, Londra, Londra 5, Luxemburg, Marsilia, Milano, Mineapolis, Moscova, Munchen, Napoli, New Delhi, Nisa, Odessa, Orange County, Palma de Mallorca, Phenian, Podgorita, Praga, Riad, Roma, Roquetas de mar, Rostov pe Don, Salonic, San Marino, Sankt Petersburg, Santiago de Chile, Santiago de Composte, Seul, Taskent, Teheran, Tel Aviv, Torino, Torring, Treviso, Valetta, Varset, Varsovia, Viena'
+romania = unlist(str_split(romania, ", "))
+romania = as.data.frame(romania)
+write.table(romania, file = "roleg08_cities.txt", sep = "\t", row.names = F, col.names = F)
+# then I threw all the above cities into google translate and now reload them to see if they match 
+romania_2 = read.delim("roleg08_cities.txt", sep = "\t", header = F)
+romania$english = romania_2$V1
+romania$weird = countrycode(romania$english, 'name', 'country.etc', custom_dict = try)
+not_translated = "Alcazar de San Juan, Algarve, Alicante, Amman, Ashgabat, Beirut, Belfast-Ballymena, Castellon de la Plan, Cernauti, Ciudad Real, Cosalda, Gyula, Hague, Hanoi, Heraklion, Hong Kong, Kuwait, Larose, Limassol, Luxembourg, New Delhi, Nisa, North Carolina, Odessa, Orange County, Palma de Mallorca, Phenian, Podgorita, Roquetas de Mar, Rostov on Don, San Marino, Santiago de Chile, Santiago de Compostela, St. Petersburg, Tel Aviv, Torring, Treviso, Valletta, Varset"
+not_translated = unlist(str_split(not_translated, ", "))
+not_translated = as.data.frame(not_translated)
+write.table(not_translated, file = "roleg08_cities2.txt", sep = "\t", row.names = F, col.names = F)
+romania = romania %>% filter(!is.na(weird))
+names(romania)[1] = "pol_stat"
+ro_dic = rbind(ro_dic, romania)
 
 
-##
-#
+romania_2 = read.delim("roleg08_cities2.txt", sep = "\t", header = F)
+not_translated$weird = romania_2$V1
+romania$weird[is.na(romania$weird)] = countrycode(romania$english[is.na(romania$weird)], 'not_translated', 'weird', custom_dict = not_translated)
+# messed something up here // -> like really messed up / but if I'm smart I should be able to get it back
+# mismatched London (and potentially more but not as far as I can see)
+romania$weird[romania$english == 'London'] = 'UK'
+# just need romanian names now
+romania = romania[c(1,3)]
+names(romania)[1] = 'pol_stat'
+ro_dic = rbind(ro_dic, romania)
+ro_leg08$weird = countrycode(ro_leg08$pol_stat, 'pol_stat', 'weird', custom_dict = ro_dic)
+ro_leg08$pol_stat = countryname(ro_leg08$weird)
+names(ro_leg08)[1] = 'country'
+rom_names = names(ro_leg08)
+ro_leg08= ro_leg08[-30]
+ro_leg08 = aggregate(c(ro_leg08[2:29]), by = ro_leg08[1], sum)
+
+names(ro_leg08) = rom_names[-30]
+ro_leg08 = main_function(ro_leg08, 'PNL', 'U-Polonezi', 5, 'PSD+PC')
+ro_leg08 = extra_cols(ro_leg08, 'Romania', "2008-11-30", "Legislative")
+
 ## Pres 2019
 # file is actually in the wrong folder and the wrong name
 ro_16 = read.csv("Romania/leg_16/Abroad only. RAW. pv_SR_PRSD_FINAL (1).csv", encoding = "UTF-8", sep = ";")
@@ -333,12 +394,45 @@ for (i in seq_along(english)){
 ro_16$country =  countryname(ro_16$weird)
 ro_16 = ro_16[-38]
 
+# Now properly legislative 2016
+# had some problems with the file so basically just copy pasted abroad results into
+# new file 
+rol16 = read.csv("Romania/leg_16/modified_leg16.csv", encoding = "UTF-8")
+# no dictionary for the additonal variables
+# remove empty columns
+allmisscols <- sapply(rol16, function(x) all(is.na(x) | x == '' ))
+rol16 = rol16[!allmisscols]
+# remove unneccarsy columns
+rol16 = rol16[-c(1,3:6, 44)]
+rol16 = aggregate(c(rol16[2:38]), by = rol16[1], sum)
+#first the countries and then wait until better idea for the missing columns//
+rol16$weird = countrycode(tolower(rol16$X.U.021A.ara), 'romanian', 'english', custom_dict = custom_dict)
+romanian = "bosnia si hertegovina, croatia, elvetia, franta, hong kong, kenia, macedonia, malaezia, olanda, palestina, republica ceha, statele unite, tailanda"
+romanian = unlist(str_split(romanian, ", "))
+english = c("Bosnia and Herzegovina", "Croatia", "Switzerland", "France",
+            "Hong Kong", "Kenya", "Macedonia", "Malaysia", "Netherlands", "Palestine",
+            "Czechia", "US", "Thailand")
+
+for (i in seq_along(romanian)){
+  rol16$weird[tolower(rol16$X.U.021A.ara) == romanian[i]] = english[i]
+}
+rol16$X.U.021A.ara = countryname(rol16$weird)
+rol16 = rol16[-39]
+detect_str_enc("UNIUNEA.ELENA.DIN.ROMÂNIA")
+## no modifying names //
+names(rol16) =  iconv(names(rol16), from = "ISO-8859-13", to = 'ASCII//TRANSLIT')
+names(rol16) <- gsub("[.]*$|[.]*(?=[.])", "",names(rol16), perl = TRUE)
+names(rol16) <- gsub("\\.", " ", names(rol16))
+names(rol16)[1] = "country"
+rol16 = main_function(rol16, "PARTIDUL NA U 021A IONAL LIBERAL", "UNIUNEA DEMOCRATA TURCA DIN ROMANIA", 15, "PARTIDUL SOCIAL DEMOCRAT")
+rol16 = extra_cols(rol16, 'Romania', "2016-12-11", "Legislative")
+rol16 = rol16[-c(6:8, 10:14, 17)]
+names(rol16)[5:8] = c('registered_voters', 'total_votes', 'valid_votes', 'blanco_votes')
 
 #### Bulgaria -----------------------------------------------------------------
 ## 2009 wasn't working so its below (hopefully)
 
 # Leg 2013
-
 bu_cities = read.delim("C:/Users/lenovo/Downloads/cities.txt", sep = ";", header = F)
 bu_cities = bu_cities[-c(1,4:6)]
 
@@ -397,13 +491,181 @@ buleg_13 = extra_cols(buleg_13, "Bulgaria", "2013-05-12", "Legislative")
 buleg_09 = read.delim("New/Bulgaria/Leg. 2009 (usabel)/pe2009_partyvotes.txt", sep = ";", header = F)
 buleg_09 = buleg_09 %>% filter(V1 >= 320100001)
 
-
 countrycode(buleg_09$V1, "V2", "V3", custom_dict = bu_cities)
-## not working so trying with 2013
-## also not working --> leave it for now //#
+#' not working 
+#' but for each section code the first 4 characters uniquely identify a country
+buleg_09$V1 = substr(buleg_09$V1, 1, 4)
+buleg_09 = buleg_09[-20]
+buleg_09 = aggregate(c(buleg_09[2:19]), by = buleg_09[1], sum)
+# but then no party dictionary??
+bu_dic = buleg_09[1]
+write.table(bu_dic, file = "bu09_countrydic.txt", sep = "\t", row.names = F, col.names = F)
+bu_dic = read.delim("bu09_countrydic.txt", sep = ";", header = F)
+bu_dic = bu_dic[-2]
+bu_dic$V3 = trimws(bu_dic$V3)
+buleg_09$V1 =  countrycode(buleg_09$V1, "V1", "V3", custom_dict = bu_dic)
+buleg_09 = add_column(buleg_09, valid_votes = rowSums(buleg_09[2:19]), .after = "V1")
+## there is data missing, as valid votes from this data are not equal to valid votes from website 
+# it is off by 5: Website (153534), Data: 153529
+party_identifyer = (colSums(buleg_09[3:20]) / 153529)
+party_identifyer * 100#
+
+# will be using english google translation -> hopefully helpful for EVP party dictionary
+# basically I'm comparing the column sums divided by valid votes with total
+#results on the webpage and then insert the party names accordingly
 
 
-# none of the presidentials are working // 
+bulgarian_parties = c("Order, Law and Justice", "PE LEADER", "COAT OF ARMS", 
+                      "MRF Movement for Rights and Freedoms", "ATTACK party",
+                      "COALITION FOR BULGARIA", "UNION OF PATRIOTIC FORCES DEFENSE",
+                      "NMSS", "BULGARIAN LEFT COALITION", "Liberal Alternative and Peace Party (PLAM)",
+                      "PP GREENS", "SOCIAL DEMOCRATS", "P.P. THE OTHER BULGARIA",
+                      "UNION OF BULGARIAN PATRIOTS (UPS)", "National Movement for the Salvation of the Fatherland",
+                      "Bulgarian National Union - ND", "The Blue Coalition", "For the Motherland - DGI-NL")
+# of course it ended up being 18 parties in the first place anyways -> but now at least sure abou the order 
+
+names(buleg_09)[3:20] = bulgarian_parties
+buleg_09 = renamer(buleg_09,1)
+buleg_09 = main_function(buleg_09, "Order, Law and Justice", "For the Motherland - DGI-NL", 3, "COAT OF ARMS")
+buleg_09 = extra_cols(buleg_09, "Bulgaria", "2009-07-05", "Legislative")
+
+
+per_06 = read_xlsx("C:/Users/lenovo/Downloads/P2006.xlsx")
+
+#### Colombia ==================================================================
+
+#Legislative 2002
+# this is so bad! 
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/Colombia 2002 Camara")
+
+my_files <- list.files(pattern = "\\.xlsx$")
+
+df_list <- lapply(my_files, read_xlsx, range = cell_rows(8:35), trim = T)
+names(df_list) <- gsub("\\.xlsx$", "", my_files)
+'%ni%' <- Negate('%in%')
+list_ind = c()
+for (i in seq_along(df_list)){
+  if ("Departamento" %ni% names(df_list[[i]])){
+    list_ind = append(list_ind, i)
+    
+  }
+}
+for (i in  list_ind){
+  df_list[[i]] = row_to_names(df_list[[i]], 1)
+}
+
+## dies bit weird order
+df_list[[57]] = row_to_names(df_list[[57]], 1)
+
+
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+
+
+colleg_02 =  do.call(rbind, df_list)
+colleg_02 = colleg_02[-c(1:3)]
+colleg_02 = colleg_02 %>% filter(!(is.na(Candidato)))
+colleg_02 = colleg_02 %>% pivot_wider(names_from = Candidato, values_from = Votos)
+colleg_02[2:28] = lapply(colleg_02[2:28], function(y) as.numeric(gsub("\\.", "", y)))
+colleg_02 = add_column(colleg_02, valid_votes = rowSums(colleg_02[2:26]), .after = 'country')
+colleg_02 = colleg_02[-c(28,29)]
+names(colleg_02) = iconv(names(colleg_02), from = "UTF-8", to = 'ASCII//TRANSLIT')
+str(colleg_02)
+colleg_02$weird= countryname(colleg_02$country)
+colombian = "Antilas Holondesas, Dom. Rep., Guayana, Malysia"
+colombian = unlist(str_split(colombian, ", "))
+english = c("Netherlands Antilles", "Dominican Republic", "Guyana",  "Malaysia")
+for (i in seq_along(colombian)){
+  colleg_02$weird[colleg_02$country == colombian[i]] = english[i]
+}
+colleg_02$country = countryname(colleg_02$weird)
+colleg_02 = colleg_02[-28]
+
+# who tf won this election?
+colleg_02 = main_function(colleg_02, 'RAFAEL DE JESUS CASTELLAR', 'ALVARO DE JESUS ZULETA CORTES', 3, ) 
+
+
+## Legislative 2006
+# file structure is super weird -> needs some extra attention
+
+## Legislative 2010
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/ocr_files")
+
+my_files <- list.files(pattern = "\\.xls$")
+
+df_list <- lapply(my_files, read_xls)
+names(df_list) <- gsub("\\.xls$", "", my_files)
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+col_10 =  do.call(rbind, df_list)
+row.names(col_10) <- NULL
+col_10 = col_10[c(2,3,8)]
+col_10 = col_10 %>% pivot_wider(names_from = NOMBRE, values_from = VOTACION, values_fill = 0)
+col_10$weird = countryname(col_10$country)
+colombian =  c("curazao", "UK (London+Dublin)")
+english = c("Curaçao", 'UK')
+for (i in seq_along(colombian)){
+  col_10$weird[col_10$country == colombian[i]] = english[i]
+}
+col_10$country = countryname(col_10$weird)
+col_10 = col_10[-17]
+col_10 = main_function(col_10, "PARTIDO LIBERAL COLOMBIANO", "MOVIMIENTO INDEPENDIENTE DE RENOVACION ABSOLUTA MIRA", 6, "PARTIDO SOCIAL DE UNIDAD NACIONAL PARTIDO DE LA U")
+names(col_10)[2:5] = c("blanco_votes", 'valid_votes', 'null_votes', 'unmarked_votes')
+col_10 = extra_cols(col_10, 'Colombia', "2010-03-14", "Legislative")
+
+
+
+## Czech Republic //
+cz_02 = read_xlsx("Czechia/ps2002_zahranici (1)/PST4p_zahranici.xlsx")
+cz_parties = read_xlsx("Czechia/ps2002_zahranici (1)/PSRKL.xlsx")
+cz_codes = read_xlsx("Czechia/ps2002_zahranici (1)/ps2002_rzvo.xlsx")
+cz_codes = cz_codes[c(2,12)]
+cz_02 = left_join(cz_02, cz_codes)
+# we might have a problem here -> as I don't get what is what // 
+cz_02 = cz_02[]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
