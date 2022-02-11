@@ -108,4 +108,33 @@ Problematic, as every other pdf is different -> sometimes not properly read
 a bit lost here
 """
 
+## Moldova
 
+file = r"Moldova\leg_09_july\5913_electorala_29_iulie_2009, page 440.pdf"
+ 
+tables = camelot.read_pdf(file, pages='441, 442, 443, 444, 445, 446')
+df_1 = pd.concat([tables[0].df, tables[1].df], axis = 1, ignore_index=True)
+df_2 = pd.concat([tables[2].df, tables[3].df], axis = 1, ignore_index=True)
+df_3 = pd.concat([tables[4].df, tables[5].df], axis = 1, ignore_index=True)
+
+df = pd.concat([df_1, df_2, df_3], ignore_index=True)
+df.to_csv('moldova_leg_09_july.csv')
+## need names:
+tables = camelot.read_pdf(file, pages = '429, 430')
+names_1 = tables[1].df.head(1)
+names_mol = ["section_nr", 'country', 'Number of voters included in the electoral lists',
+             'Number of voters included in the lists more',
+            'The number of voters received ballots', 
+            'The number of voters who participated in the voting',
+            'Difference of ballots received and voters who participated in the voting',
+            'invalid_ballots', 'section_nr', 'valid_votes', "Number of newslettersvote received", 
+            "Number of ballots unused and canceled", 'Partidul Comunistilor din Republica Moldova',
+            "Partidul Popular Crestin Democrat", 'Alianta MOLDOVA NOASTRA', 
+            'Partidul Liberal', 'Partidul Liberal Democrat din Moldova',
+            'Partidul Democrat din Moldova', 'Partidul Social Democrat', 
+            'Partidul Ecologist Alianta Verde din Moldova']
+
+with open("mol_leg09_july_names.txt", "w") as output:
+    output.write(str(names_mol))
+
+# just sclicing is missing but will do in R
