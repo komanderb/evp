@@ -1,5 +1,5 @@
 ### batch 4
-install.packages('maps')
+#install.packages('maps')
 ### Loading packages------------------------------------------------------------
 library(countrycode)
 library(plyr)
@@ -529,8 +529,88 @@ buleg_09 = renamer(buleg_09,1)
 buleg_09 = main_function(buleg_09, "Order, Law and Justice", "For the Motherland - DGI-NL", 3, "COAT OF ARMS")
 buleg_09 = extra_cols(buleg_09, "Bulgaria", "2009-07-05", "Legislative")
 
+#### Peru ----------------------------------------------------------------------
 
-per_06 = read_xlsx("C:/Users/lenovo/Downloads/P2006.xlsx")
+# Legislative 2006:
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Peru/leg_06/named_files")
+my_files <- list.files(pattern = "\\.csv$")
+df_list <- lapply(my_files, read.csv, encoding = "UTF-8")
+names(df_list) = gsub("\\.csv$", "", my_files)
+for (i in seq_along(df_list)){
+  df_list[[i]]$country = names(df_list)[i]
+  df_list[[i]] = df_list[[i]][-c(3,4)]
+  names(df_list[[i]])[1:2] = c('party', 'votes')
+}
+# problem is that some party names differ a bit in their spelling across countries
+# but no worries as I just use the spelling of first table for every table as 
+# structure is the same
+
+party_vector = df_list[[1]][,1]
+for (i in seq_along(df_list))
+  df_list[[i]][1] = party_vector
+
+
+perl_06 = do.call(rbind, df_list)
+rownames(perl_06) = NULL
+perl_06$votes = gsub("\\.", "", perl_06$votes)
+perl_06$votes = gsub("\\,", "", perl_06$votes)
+perl_06$votes = as.numeric(perl_06$votes)
+perl_06$party = trimws(perl_06$party)
+perl_06 = perl_06 %>% pivot_wider(names_from = party, values_from = votes)
+perl_06 = perl_06[-30]
+names(perl_06)[26:30] = c('valid_votes', 'blanco_votes', 'null_votes', 'total_votes',
+                          'registered_voters')
+
+names(perl_06) = iconv(names(perl_06), from = "UTF-8", to = 'ASCII//TRANSLIT')
+str(perl_06)
+perl_06 = main_function(perl_06, 'PARTIDO SOCIALISTA', 'Y SE LLAMA PERU', 7, 'UNION POR EL PERU')
+perl_06 = extra_cols(perl_06, 'Peru', "2006-04-09", 'Legislative')
+perl_06$weird = countryname(perl_06$country)
+
+peru = unlist(str_split("Guayana, Netherland Antilles, Philipines", ", "))
+english = c("Guyana", "Netherlands Antilles","Philippines")
+for (i in seq_along(peru)){
+  perl_06$weird[perl_06$country == peru[i]] = english[i]
+}
+
+perl_06$country = countryname(perl_06$weird)
+perl_06 = perl_06[-60]
+
+## Presidential 2006 first round //
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Peru/pres_06/named_files")
+my_files <- list.files(pattern = "\\.csv$")
+df_list <- lapply(my_files, read.csv, encoding = "UTF-8")
+names(df_list) = gsub("\\.csv$", "", my_files)
+for (i in seq_along(df_list)){
+  df_list[[i]]$country = names(df_list)[i]
+  df_list[[i]] = df_list[[i]][-c(3,4)]
+  names(df_list[[i]])[1:2] = c('party', 'votes')
+}
+
+party_vector = df_list[[1]][,1]
+for (i in seq_along(df_list))
+  df_list[[i]][1] = party_vector
+per_06 = do.call(rbind, df_list)
+rownames(perl_06) = NULL
+per_06$votes = gsub("\\.", "", per_06$votes)
+per_06$votes = gsub("\\,", "", per_06$votes)
+per_06$votes = as.numeric(per_06$votes)
+per_06$party = trimws(per_06$party)
+per_06 = per_06 %>% pivot_wider(names_from = party, values_from = votes)
+names(per_06) = iconv(names(per_06), from = "UTF-8", to = 'ASCII//TRANSLIT')
+per_06 = per_06[-26]
+names(per_06)[22:26] = c('valid_votes', 'blanco_votes', 'null_votes', 'total_votes',
+                          'registered_voters')
+per_06 = main_function(per_06, 'PARTIDO SOCIALISTA', 'Y SE LLAMA PERU', 7, 'UNION POR EL PERU')
+per_06 = extra_cols(per_06, 'Peru', "2006-04-09", 'Presidential')
+per_06$weird = countryname(per_06$country)
+peru = unlist(str_split("Guayana, Philipines", ", "))
+english = c("Guyana","Philippines")
+for (i in seq_along(peru)){
+  per_06$weird[per_06$country == peru[i]] = english[i]
+}
+per_06$country = countryname(per_06$weird)
+per_06 = perl_06[-52]
 
 #### Colombia ==================================================================
 
