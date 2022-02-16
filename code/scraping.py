@@ -11,6 +11,7 @@ import selenium
 from selenium import webdriver
 #pip install webdriver-manager
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 os.chdir(r'C:\Users\lenovo\Documents\BSE\RA\Data\Data\EVP')
 
 url = 'https://pemilu2019.kpu.go.id/#/dprri/hitung-suara/'
@@ -479,3 +480,159 @@ df_general, df_votes = best_romanian_scraper(1, 203)
 browser.close()
 df_general.to_csv('ro_leg_08_general.csv')
 df_votes.to_csv('ro_leg_08_votes.csv')
+
+
+## Moldova //
+""" Legislative 2012 """
+# can't automate because of captcha // 
+url = 'https://archiveresults.cec.gov.ge/'
+# tried all the other links as well //
+
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+def moldovo_scraper(link):
+    table = pd.read_html(browser.find_element(By.XPATH, '//*[@id="table36"]').get_attribute('outerHTML'))[0]
+    return table
+# not able to pass the captcha // 
+df_1 = moldovo_scraper(url)
+""" We might have a problem here, as the website does not let my browser pass the 
+captcha, even if I try it several times by hand""" 
+
+
+### Macedonia //
+from time import sleep
+url = 'https://rezultati2016.sec.mk/Parliamentary/Results?cs=en-US&r=r&rd=r1&eu=8&m=All'
+
+def mace_scraper(link):
+    df_list_1= []
+    df_list_2 = []
+    polling_station = []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    drop = browser.find_element_by_xpath('//*[@id="menuMunicipalities"]')
+    list_pol = drop.find_elements_by_tag_name('option')
+    for counter, element in enumerate(list_pol):
+        drop = browser.find_element_by_xpath('//*[@id="menuMunicipalities"]')
+        list_pol = drop.find_elements_by_tag_name('option')
+        polling_station.append(list_pol[counter].text)
+        list_pol[counter].click()
+        sleep(1)
+        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="div-results-table"]/div/table').get_attribute('outerHTML'))[0]
+        browser.find_element_by_xpath('//*[@id="procesim"]/img').click()
+        sleep(1)
+        df_2 = pd.read_html(browser.find_element_by_xpath('//*[starts-with(@id,"popover")]/div[2]/div').get_attribute('outerHTML'))[0]
+        df_1.insert(0, 'pol_stat', polling_station[counter])
+        df_2.insert(0, 'pol_stat', polling_station[counter])
+        df_list_1.append(df_1)
+        df_list_2.append(df_2)
+        
+    
+    df_1 = pd.concat(df_list_1, ignore_index=True, sort=False)
+    df_2 =  pd.concat(df_list_2, ignore_index=True, sort=False)
+    return(df_1, df_2)
+
+df_1, df_2 = mace_scraper(url)
+
+df_1.to_csv('macedonia_2016_1.csv')
+df_2.to_csv('macedonia_2016_2.csv')
+
+
+
+## Ecuador //
+
+
+### Bulgaria 
+url = "https://pi2005.cik.bg/results/2-32.html"
+
+#Legislative 2005 //
+from selenium.common.exceptions import NoSuchElementException
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
+def bul_scraper(link):
+    country_list = []
+    polling_stations_list = []
+    links = []
+    df_list = []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    list_pol = browser.find_element_by_xpath('/html/body/table/tbody/tr[4]/td[3]')
+    polling_stations = list_pol.find_elements_by_tag_name('div')
+    for counter, item in enumerate(polling_stations):
+        if counter < 2:
+            pass
+        else:
+            list_pol = browser.find_element_by_xpath('/html/body/table/tbody/tr[4]/td[3]')
+            polling_stations = list_pol.find_elements_by_tag_name('div')
+            try:
+                link = polling_stations[counter].find_element_by_tag_name('a').get_attribute('href') 
+                links.append(link)
+                country_list.append(country)
+                polling_stations_list.append(polling_stations[counter].text)
+            except NoSuchElementException:
+                # this should work as every time a list of polling stations
+                # begins with unclickable country 
+                country = polling_stations[counter].text
+                
+    for counter, i in enumerate(links):
+        browser.get(i)
+        sleep(0.5)
+        df = pd.read_html(browser.find_element_by_xpath('/html/body/table/tbody/tr[4]/td[3]/table').get_attribute('outerHTML'))[0]
+        df.insert(0, 'pol_stat', polling_stations_list[counter])
+        df.insert(0, 'country', country_list[counter])
+        df_list.append(df)
+        
+    final_df = pd.concat(df_list, ignore_index=True, sort=False)
+    return(final_df)
+# that actually should work, but maybe it is more efficient to directly translate?
+
+                
+df = bul_scraper(url)
+    
+df.to_csv('bulgaria_leg_2005.csv')   
+
+# Presidential 2011:
+url = "https://results.cik.bg/mipvr2011/tur1/prezidentski/2900.html"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+# translated countries before (because easier):
+countries = browser.find_element_by_xpath('//*[@id="sidebar"]/ul')
+# google translate manually
+country_list = countries.find_elements_by_tag_name('li')
+countries = []
+for i in country_list:
+    countries.append(i.text)
+
+def bul_scraper(link, country_list):
+    countries = []
+    df_list = []
+    links= []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    #countries = browser.find_element_by_xpath('//*[@id="sidebar"]/ul')
+    #country_list = countries.find_elements_by_tag_name('li')
+    for counter, element in enumerate(country_list):
+        countries = browser.find_element_by_xpath('//*[@id="sidebar"]/ul')
+        element_list = countries.find_elements_by_tag_name('li')
+        #country_list.append(country_list[counter].text)
+        links.append(element_list[counter].find_element_by_tag_name('a').get_attribute('href'))
+        
+    for counter, i in enumerate(links):
+        browser.get(i)
+        sleep(0.5)
+        df = pd.read_html(browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/table').get_attribute('outerHTML'))[0]
+        df.insert(0, 'country', country_list[counter])
+        df_list.append(df)
+        
+    final_df = pd.concat(df_list, ignore_index=True, sort=False)
+    return(final_df)    
+
+
+df = bul_scraper(url, countries)                                                                                        	
+df.to_csv('bulgaria_pres_2011.csv')
+
+## get a party dictionary to make life easy:
+df_party = pd.read_html(browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/table').get_attribute('outerHTML'))[0]
+df_party = df_party.iloc[:, 0:2]
+# did some modifications by hand. 
+
+df_party.to_csv('bu_pres_2011_dic.csv')
