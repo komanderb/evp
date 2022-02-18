@@ -529,6 +529,168 @@ buleg_09 = renamer(buleg_09,1)
 buleg_09 = main_function(buleg_09, "Order, Law and Justice", "For the Motherland - DGI-NL", 3, "COAT OF ARMS")
 buleg_09 = extra_cols(buleg_09, "Bulgaria", "2009-07-05", "Legislative")
 
+
+# Legislative 2005
+
+bu_05 = read.csv("bulgaria_leg_2005.csv", encoding = 'UTF-8')
+bu_05$country = trimws(bu_05$country)
+bu_countries = unique(bu_05$country)
+for (i in bu_countries)
+  print(i)
+# after google translate //
+bu_english = c(
+   "Australia",
+   "Austria",
+   "Albania",
+   "Algeria",
+   "Angola",
+   "Argentina",
+   "Afghanistan",
+   "Belarus",
+   "Belgium",
+   "Bosnia and Herzegovina",
+   "United Kingdom",
+   "Venezuela",
+   "Georgia",
+   "Greece",
+   "Denmark",
+   "Egypt",
+   "Zimbabwe",
+   "Israel",
+   "Iraq",
+   "Iran",
+   "Ireland",
+   "Iceland",
+   "Spain",
+   "Italy",
+   "Yemen",
+   "Jordan",
+   "Kazakhstan",
+   "Canada",
+   "Qatar",
+   "Cyprus",
+   "China",
+   "Korea",
+   "Kosovo",
+   "Kuwait",
+   "Libya",
+   "Lebanon",
+   "Macedonia",
+   "Malta",
+   "Morocco",
+   "Mexico",
+   "Moldova",
+   "Nigeria",
+   "Netherlands",
+   "New Zealand",
+   "Norway",
+   "UAE",
+   "Poland",
+   "Portugal",
+   "Romania",
+   "Russia",
+   "USA",
+   "Singapore",
+   "Syria",
+   "Slovakia",
+   "Slovenia",
+   "Sudan",
+   "Serbia and Montenegro",
+   "Tunisia",
+   "Turkey",
+   "Uzbekistan",
+   "Ukraine",
+   "Hungary",
+   "Finland",
+   "Germany",
+   "France",
+   "Croatia",
+   "Czech Republic",
+   "Chile",
+   "Switzerland",
+   "Sweden",
+   "South Africa",
+   "Japan"
+)
+
+bu_05_dic = as_data_frame(cbind(bu_countries, bu_english))
+# seems to be correct //
+bu_values = unique(bu_05$X1)
+for (i in bu_values)
+  print(i)
+bu_en = c(
+  "Number of voters on the main voter list:",
+  "Number of voters in the supplementary voter list:",
+  "Number of voters according to the signatures on the voter lists:",
+  "Number of ballots found in the ballot boxes:",
+  "Number of invalid votes:",
+  "Number of actual votes:",
+  "11. DISTRIBUTION OF VOTES ON CANDIDATE LISTS",
+  "Number and title of the party or coalition or the names of the independent candidates",
+  "\" FEDERATION OF FREE BUSINESS - UNION BULGARIA \"",
+  "MOVEMENT\" FORWARD BULGARIA \"",
+  "\" COALITION FOR BULGARIA - BSP, PBS, PD - SOCIAL DEMOCRATS, DSH, P. \"ROMA \", KPB, BZNS - AL. STAMBOLIYSKI, ZPB \"",
+  "GRANITE",
+  "\" CHAMBER OF EXPERTS \"",
+  "SIMEON II NATIONAL MOVEMENT (NMSS)",
+  "COALITION \" DIGNIFIED BULGARIA \"",
+  "\" DEMOCRATS FOR STRONG BULGARIA \"(DSB)",
+  "NK \" LONG LIVE BULGARIA! \"",
+  "PD \" EUROROMA \"",
+  "ROSE COALITION (BSD, NDP and OBT PARTIES)",
+  "UNION OF FREE DEMOCRATS, AUA - PEOPLE'S UNION, VMRO - BULGARIAN NATIONAL MOVEMENT - COALITION \" BULGARIAN PEOPLE'S UNION \"",
+  "THE NEW TIME",
+  "ATTACK COALITION",
+  "FAGO",
+  "\" UNITED PARTY OF PENSIONERS IN BULGARIA \"(OPPB)",
+  "MRF\" MOVEMENT FOR RIGHTS AND FREEDOMS \"",
+  "BULGARIAN CHRISTIAN COALITION (BHC)",
+  "UDF - UDF, DEMOCRATIC PARTY, MOVEMENT \" GERGYOVDEN \", BZNS NS - BZNS, DROM",
+  "NZP \" NIKOLA PETKOV \"",
+  "FREE DEMOCRATS PARTY - PSD",
+  "\" HOMELAND \""
+)
+
+bu_05_dic_2 = as_data_frame(cbind(bu_values, bu_en))
+# translating the relevant features
+bu_05$country = countrycode(bu_05$country, 'bu_countries', 'bu_english', custom_dict = bu_05_dic)
+bu_05$X1 =  countrycode(bu_05$X1, 'bu_values', 'bu_en', custom_dict = bu_05_dic_2)
+
+# this worked actually good 
+
+bu_05 = bu_05[-c(1,3,4)]
+drop_vector = c("11. DISTRIBUTION OF VOTES ON CANDIDATE LISTS", "Number and title of the party or coalition or the names of the independent candidates")
+bu_05 = bu_05 %>% filter(!(X1 %in% drop_vector))
+bu_05$X2 = as.numeric(bu_05$X2)
+# this will already sum up by country
+bu_05 = bu_05 %>% pivot_wider(names_from = X1, values_from = X2, values_fn = sum)
+
+## the first 4 numerical columns are identical (besides the  0)
+bu_05 = bu_05[-c(3:5)]
+names(bu_05)[2:4] = c('total_votes', 'invalid_votes', 'valid_votes')
+# also I'm annoyed by quotes so I will drop them
+names(bu_05) = gsub("\"", "", names(bu_05))
+names(bu_05) = trimws(names(bu_05))
+str(bu_05)
+
+bu_05 = main_function(bu_05, "FEDERATION OF FREE BUSINESS - UNION BULGARIA", "HOMELAND", 5, "COALITION FOR BULGARIA - BSP, PBS, PD - SOCIAL DEMOCRATS, DSH, P. ROMA , KPB, BZNS - AL. STAMBOLIYSKI, ZPB")
+bu_05 = extra_cols(bu_05, 'Bulgaria', "2005-06-25", "Legislative")
+bu_05$country = countryname(bu_05$country)
+
+## Presidential 2011
+bu_11 = read.csv('bulgaria_pres_2011.csv', encoding = 'UTF-8')
+bu_11_dic = read.csv('bu_pres_2011_dic.csv', encoding = 'UTF-8')
+names(bu_11_dic)[2] = 'party_number'
+bu_11$party = countrycode(bu_11$X.U.2116, 'party_number', 'Candidate', custom_dict = bu_11_dic)
+bu_11 = bu_11[-c(1,3,4,6)]
+names(bu_11)[2] = 'votes'
+bu_11 = bu_11 %>% pivot_wider(names_from = party, values_from = votes)
+bu_11$country = countryname(bu_11$country)
+bu_11 = add_column(bu_11, valid_votes = rowSums(bu_11[2:19]), .after = 'country')
+bu_11 = main_function(bu_11, 'Kuneva-Hristov Initiative Committee', 'Yosifov-Dimitrov Initiative Committee', 
+                      3, 'PP GERB')
+bu_11 = extra_cols(bu_11, 'Bulgaria', '2011-10-23', 'Presidential')
+
 #### Peru ----------------------------------------------------------------------
 
 # Legislative 2006:
@@ -612,6 +774,19 @@ for (i in seq_along(peru)){
 per_06$country = countryname(per_06$weird)
 per_06 = perl_06[-52]
 
+## Presidential 2016
+
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Peru/pres_16")
+my_files = list.files(pattern = ".csv")
+df_list <- lapply(my_files, read.csv, encoding = "UTF-8")
+names(df_list) = gsub("\\.csv$", "", my_files)
+for (i in seq_along(df_list)){
+  df_list[[i]]$country = names(df_list)[i]
+  df_list[[i]] = df_list[[i]][-c(3,4)]
+  names(df_list[[i]])[1:2] = c('party', 'votes')
+}
+
+per_16 = do.call(rbind, df_list)
 #### Colombia ==================================================================
 
 #Legislative 2002
@@ -667,6 +842,75 @@ colleg_02 = main_function(colleg_02, 'RAFAEL DE JESUS CASTELLAR', 'ALVARO DE JES
 
 ## Legislative 2006
 # file structure is super weird -> needs some extra attention
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/leg_06/Source Files")
+my_files = list.files(pattern = "\\.xlsx$")
+df_list <- lapply(my_files, read_xlsx, range = cell_rows(16:23))
+df_list = df_list[-9]
+my_files = my_files[-9]
+names(df_list) <- gsub("\\.xlsx$", "", my_files)
+for (i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+#also germany is fucked
+df_list = df_list[-19]
+col_06 = do.call(rbind, df_list)
+# thats a start // 
+my_files = list.files(pattern = "\\.xlsx$")
+df_list <- lapply(my_files, read_xlsx, skip = 24)
+df_list = df_list[-c(9,20)]
+my_files = my_files[-c(9,20)]
+names(df_list) <- gsub("\\.xlsx$", "", my_files)
+for (i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+col_06_votes = do.call(rbind, df_list)
+
+
+rownames(col_06) = NULL
+rownames(col_06_votes) = NULL
+
+
+col_06 = col_06[-c(4,8)]
+col_06= col_06 %>% filter(!(is.na(...1)))
+col_06 = col_06 %>% pivot_wider(names_from = c(...1, ...3, ...6), values_from = c(...2, ...5, ...7))
+## a bit confusing in terms of the names but we only want these columns:
+
+col_06 = col_06[c(1:4, 10:12)]
+names(col_06)[2:7] = c('registered_voters', 'total_votes', 'valid_votes', 'blanco_votes',
+                       'null_votes', 'unmarked_votes')
+col_06$blanco_votes  = gsub("—", "0", col_06$blanco_votes)
+col_06[is.na(col_06)] = '0'
+col_06[2:7] = lapply(col_06[2:7], function(y) as.numeric(gsub(",", "", y)))
+
+# turning back to votes:
+
+col_06_votes = col_06_votes[-c(1,3,5)]
+col_06_votes = col_06_votes %>% filter(!(is.na(VOTOS)))
+drop_vector = c("VOTOS EN BLANCO .......", "VOTOS NULOS ..........",
+                "VOTOS NO MARCADOS ....", "TOTAL VOTOS ...........",
+                "TOTAL VOTOS SUFRAGADOS ...")
+col_06_votes = col_06_votes %>% filter(!(`PARTIDO O MOVIMIENTO POLITICO` %in%  drop_vector))
+col_06_votes = col_06_votes %>% pivot_wider(names_from = `PARTIDO O MOVIMIENTO POLITICO`, values_from = VOTOS)
+col_06_votes[is.na(col_06_votes)] = '0'
+col_06_votes[2:33] = lapply(col_06_votes[2:33], function(y) as.numeric(gsub(",", "", y)))
+col_06 = left_join(col_06, col_06_votes)
+## Canada and Germany missing - will have to put in values by Hand
+
+ger_party = c(24, 52, 7, 2, 4, 2, 44, 6, 1, 2, 0, 0,0, 1, 1, 0, 1, 2, 0, 1,0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,0)
+ger_rest = c('Germany', NA, NA, NA, 32, NA, NA)
+col_06 = rbind(col_06, c(ger_rest, ger_party))
+col_06$valid_votes[col_06$country == 'Germany'] = sum(ger_party)
+can_party = c(227, 153, 171, 33, 115, 8, 124, 19, 3, 3, 0, 2, 5, 3, 14, 6, 4, 7, 4, 2, 18, 2, 5, 11, 4, 3, 2, 2, 4, 2, 1, 0)
+sum(can_party)
+can_rest = c('Canada', NA, NA, 957, 114, NA, NA)
+col_06 = rbind(col_06, c(can_rest, can_party))
+col_06[2:39] = lapply(col_06[2:39], function(y) as.numeric(y))
+col_06 = main_function(col_06, "PARTIDO SOCIAL DE UNIDAD NACIONAL", "MOVIMIENTO CIVICO INDEPENDIENTE", 8, "PARTIDO LIBERAL COLOMBIANO")
+col_06 = extra_cols(col_06, 'Colombia', "2006-03-12", 'Legislative')
+col_06$weird = countryname(col_06$country)
+col_06$weird[col_06$country == "Dom. Rep."] = "Dominican Republic"
+col_06$country = col_06$weird
+col_06 = col_06[-77]
+
+
 
 ## Legislative 2010
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/ocr_files")
@@ -677,6 +921,7 @@ df_list <- lapply(my_files, read_xls)
 names(df_list) <- gsub("\\.xls$", "", my_files)
 for(i in seq_along(df_list))
   df_list[[i]]$country = names(df_list)[i]
+
 col_10 =  do.call(rbind, df_list)
 row.names(col_10) <- NULL
 col_10 = col_10[c(2,3,8)]
@@ -701,7 +946,7 @@ cz_parties = read_xlsx("Czechia/ps2002_zahranici (1)/PSRKL.xlsx")
 cz_codes = read_xlsx("Czechia/ps2002_zahranici (1)/ps2002_rzvo.xlsx")
 cz_codes = cz_codes[c(2,12)]
 cz_02 = left_join(cz_02, cz_codes)
-# we might have a problem here -> as I don't get what is what // 
+
 # okay now we have what we want: drop all the hlasy#
 # also general informatin on votes is not4 available in the excel but on the website //
 
