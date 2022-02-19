@@ -762,7 +762,7 @@ per_06 = per_06 %>% pivot_wider(names_from = party, values_from = votes)
 names(per_06) = iconv(names(per_06), from = "UTF-8", to = 'ASCII//TRANSLIT')
 per_06 = per_06[-26]
 names(per_06)[22:26] = c('valid_votes', 'blanco_votes', 'null_votes', 'total_votes',
-                          'registered_voters')
+                          'registered_voters') 
 per_06 = main_function(per_06, 'PARTIDO SOCIALISTA', 'Y SE LLAMA PERU', 7, 'UNION POR EL PERU')
 per_06 = extra_cols(per_06, 'Peru', "2006-04-09", 'Presidential')
 per_06$weird = countryname(per_06$country)
@@ -780,6 +780,13 @@ setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Peru/pres_16")
 my_files = list.files(pattern = ".csv")
 df_list <- lapply(my_files, read.csv, encoding = "UTF-8")
 names(df_list) = gsub("\\.csv$", "", my_files)
+
+# the following have different number of columns and also no total votes 
+# that's why I'm going to drop them. For the analysis of participation they might 
+# become interesting again //
+
+
+df_list = df_list[-c(grep("Ghana|Jordan|Indonesia|Philippines", names(df_list)))]
 for (i in seq_along(df_list)){
   df_list[[i]]$country = names(df_list)[i]
   df_list[[i]] = df_list[[i]][-c(3,4)]
@@ -787,6 +794,97 @@ for (i in seq_along(df_list)){
 }
 
 per_16 = do.call(rbind, df_list)
+row.names(per_16) = NULL
+per_16$party = trimws(per_16$party)
+# this will be very annoying 
+per_16$party = gsub(" \\*", "", per_16$party)
+unique(per_16$party) # we have slightly different names for many of the parties
+# but also different number of rows for each country so we can't do what we did before
+
+exp_1 = "EL FRENTE AMPLIO POR JUSTICIA, VIDAY LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA,VIDA LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA,VIDA Y LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA,VIDA' LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA, .VIDAY LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA,VIDAY LIBERTAD|EL FRENTE AMPLIO POR JUSTICIA,VIDA) LIBERTAD|FRENTE AMPLIO POR JUSTICIA,VIDAY LIBERTAD"
+exp_2 = "VOTOSVÁLIDOS|VÁLIDOS|VOTOS VÁLIDOS"
+exp_3 = "VOTOS NULOS|NULOS"
+exp_4 = "VOTOS BLANCOS|BLANCOS"
+exp_5 = "EMITIDOS|VOTOS EMITIDOS"
+exp_6 = "ALIANZA ELECTORAL SOLIDARIDAD NACIONAL - UPP|ALIANZA ELECTORAL SOLIDARIDAD NACIONAL UPP|ELECTORAL SOLIDARIDAD NACIONAL UPP"
+exp_7 = "PERÚ POSIBLE|POSIBLE"
+exp_8 = "PERUANOS POR EL KAMBIO|POR EL KAMBIO"
+exp_9 = "POLÍTICO ORDEN|PARTIDO POLÍTICO ORDEN"
+
+list_expression = c(exp_1, exp_2, exp_3, exp_4, exp_5, exp_6, exp_7, exp_8, exp_9)
+# problem with costa rica -> all parties named popular but there are 3 different ones 
+# with that name, so I will translate the above and then manually insert the party names according to the values of the
+# votes in the pdf (love it)
+
+tr_1 = "EL FRENTE AMPLIO POR JUSTICIA,VIDA Y LIBERTAD"
+tr_2 = 'valid_votes'
+tr_3 = 'null_votes'
+tr_4 = 'blanco_votes'
+tr_5 = 'total_votes'
+tr_6 = 'ALIANZA ELECTORAL SOLIDARIDAD NACIONAL-UPP'
+tr_7 = "PERÚ POSIBLE"
+tr_8 = "PERUANOS POR EL KAMBIO"
+tr_9 = "PARTIDO POLÍTICO ORDEN"
+
+list_goal = c(tr_1, tr_2, tr_3, tr_4, tr_5, tr_6, tr_7, tr_8, tr_9)
+
+for (i in seq_along(list_expression)){
+  per_16$party = gsub(list_expression[i], list_goal[i], per_16$party)
+}
+
+unique(per_16$party)
+
+# still some values duplicated //
+
+ex_1 = "ESPERANZA|FRENTE ESPERANZA"
+ex_2 = "LIBERTARIO|PERÚ LIBERTARIO"
+ex_3 = "NACIÓN|PERÚ NACIÓN"
+ex_4 = "HUMANISTA PERUANO|PARTIDO HUMANISTA PERUANO"
+
+list_expression = c(ex_1, ex_2, ex_3, ex_4)
+
+tr_1 = "FRENTE ESPERANZA"
+tr_2 = "PERÚ LIBERTARIO"
+tr_3 = "PERÚ NACIÓN" 
+tr_4 = "PARTIDO HUMANISTA PERUANO"
+
+list_goal = c(tr_1, tr_2, tr_3, tr_4)
+
+for (i in seq_along(list_expression)){
+  per_16$party = gsub(list_expression[i], list_goal[i], per_16$party)
+}
+
+unique(per_16$party)
+
+#turning to the problematic ones
+per_16 %>% filter(party == "POPULAR")
+per_16[251,1] = "FUERZA POPULAR"
+per_16[253,1] = "ACCIÓN POPULAR"
+per_16[254,1] = "ALIANZA POPULAR"
+
+per_16$votes = trimws(per_16$votes)
+# even more problems here
+unique(per_16$votes)
+per_16$votes = gsub("I", "1", per_16$votes)
+per_16$votes = gsub("\\* ", "", per_16$votes)
+per_16$votes = as.numeric(gsub("\\,", "", per_16$votes))
+
+per_16 = per_16 %>% pivot_wider(names_from = party, values_from = votes)
+per_16 = per_16[-20]
+names(per_16)[20] = "registered_voters"
+per_16 = main_function(per_16, "PERUANOS POR EL KAMBIO", "PARTIDO POLÍTICO ORDEN", 7, "FUERZA POPULAR")
+per_16 = extra_cols(per_16, 'Peru', '2016-04-10', 'Presidential')
+
+per_16$weird = countryname(per_16$country)
+peru = c("Guayana", "Netherland Antilles")
+english = c("Guyana", "Netherlands Antilles")
+
+for (i in seq_along(peru)){
+  per_16$weird[per_16$country == peru[i]] = english[i]
+}
+
+per_16$country = countryname(per_16$weird)
+per_16 = per_16[-40]
 #### Colombia ==================================================================
 
 #Legislative 2002
@@ -836,7 +934,10 @@ for (i in seq_along(colombian)){
 colleg_02$country = countryname(colleg_02$weird)
 colleg_02 = colleg_02[-28]
 
-# who tf won this election?
+# who won this election?
+# There is this website: https://www.registraduria.gov.co/-Camara,4280-.html
+#But this is only for 2018 and everything else seems to be down
+
 colleg_02 = main_function(colleg_02, 'RAFAEL DE JESUS CASTELLAR', 'ALVARO DE JESUS ZULETA CORTES', 3, ) 
 
 
@@ -979,8 +1080,10 @@ ro_leg_00 = add_column(ro_leg_00, blanco_votes = NA, .after = 'null_votes')
 ro_leg_00 = add_column(ro_leg_00, invalid_votes = NA, .after = 'blanco_votes')
 
 batch_4 = bind_rows(ro_leg_00, bo_19, ind_14, ro_leg_04, ro_pres00, ro_pres04,
-                    ro_leg08, ro_16, rol16, buleg_13, buleg_09, col_10)
+                    ro_leg08, ro_16, rol16, buleg_13, buleg_09, col_10, per_16, per_06, perl_06, bu_05,
+                    bu_11, cz_02, col_06)
 
+# only colombia 2002 missing //
 
 
 write.csv(batch_4, 'batch_4.csv', row.names = F)
