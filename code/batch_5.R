@@ -242,8 +242,139 @@ geop_18_coo = main_function(geop_18_coo, "Mikheil Antadze", "Teimuraz Shashiashv
 geop_18_coo = extra_cols(geop_18_coo, "Georgia", "2018-10-28", "Presidential")
 
 
-### Macedonia
+#### Macedonia -----------------------------------------------------------------
 
 
-## Moldova 
+#### Moldova -------------------------------------------------------------------
+
+
+#### Turkey --------------------------------------------------------------------
+
+# Legislative 2015 June
+
+tur_leg15 = read_xlsx("turkey/modified_files/turkey_leg_2015.xlsx")
+# I'm going to include contested votes in valid_votes, but this can be changed
+names(tur_leg15)[1:7] = c('country', 'registered_voters', 'total_votes', 'drop1','drop2', 
+                          'valid_votes', 'invalid_votes')
+
+tur_leg15 = tur_leg15[-c(4,5)]
+names(tur_leg15) = iconv(names(tur_leg15), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_leg15 = main_function(tur_leg15, "DYP", "BTP", 6, "AK PARTI")
+tur_leg15 = extra_cols(tur_leg15, "Turkey", "2015-06-07", "Legislative")
+custom_dict$turkish =tolower(countrycode::codelist$cldr.name.tr)
+custom_dict$turkish = iconv(custom_dict$turkish, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_leg15$country = iconv(tur_leg15$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_leg15$weird = countrycode(tolower(tur_leg15$country), 'turkish', 'english', custom_dict = custom_dict)
+turkish = unlist(str_split("amerika birlesik dev., birlesik arap emir., cek cumhuriyeti, cin halk cumhuriyeti, iran, irlanda, ispanya, israil, isvec, isvicre, italya, kuzey kibris turk cum., makedonya, rusya federasyonu", ", "))
+english = c(
+  "United States",
+  "The United Arab Emirates",
+  "czech republic",
+  "People's Republic of China",
+  "Iran",
+  "Ireland",
+  "Spain",
+  "Israel",
+  "Sweden",
+  "Switzerland",
+  "Italy",
+  "north cyprus",
+  "Macedonia",
+  "russian federation"
+)
+
+
+for (i in seq_along(turkish)){
+  tur_leg15$weird[tolower(tur_leg15$country) == turkish[i]] = english[i]
+}
+
+tur_leg15$country = countryname(tur_leg15$weird)
+tur_leg15 = tur_leg15[-51]
+
+# Legislative 2015 November
+
+tur_leg15_nov = read_xlsx("turkey/modified_files/turkey_leg_2015_november.xlsx")
+names(tur_leg15_nov)[1:7] = c('country', 'registered_voters', 'total_votes', 'drop1','drop2', 
+                              'valid_votes', 'invalid_votes')
+
+tur_leg15_nov = tur_leg15_nov[-c(4,5)]
+names(tur_leg15_nov) = iconv(names(tur_leg15_nov), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_leg15_nov = main_function(tur_leg15_nov, "MILLET", "DYP", 6, "AK PARTI")
+tur_leg15_nov = extra_cols(tur_leg15_nov, "Turkey", "2015-11-01", "Legislative")
+tur_leg15_nov$country = iconv(tur_leg15_nov$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+
+tur_leg15_nov$weird = countrycode(tolower(tur_leg15_nov$country), 'turkish', 'english', custom_dict = custom_dict)
+turkish = unlist(str_split("amerika birlesik dev., birlesik arap emir., cek cumhuriyeti, cin halk cumhuriyeti, iran, irlanda, ispanya, israil, isvec, isvicre, italya, kuzey kibris turk cum., makedonya, rusya federasyonu", ", "))
+# same as above, also same order
+for (i in seq_along(turkish)){
+  tur_leg15_nov$weird[tolower(tur_leg15_nov$country) == turkish[i]] = english[i]
+}
+
+tur_leg15_nov$country = countryname(tur_leg15_nov$weird)
+tur_leg15_nov = tur_leg15_nov[-43]
+
+## Legislative 2018
+
+tur_leg18 = read_xlsx("turkey/modified_files/turkey_leg_2018.xlsx")
+tur_leg18 = tur_leg18[-c(1,5,6)]
+names(tur_leg18)[1:5] = c("country", "registered_voters", "total_votes", "valid_votes", "invalid_votes")
+names(tur_leg18) = iconv(names(tur_leg18), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+str(tur_leg18)
+tur_leg18 = main_function(tur_leg18, "AK PARTI", "MILLET ITTIFAKI", 6, "AK PARTI")
+tur_leg18 = extra_cols(tur_leg18, "Turkey", "2018-06-24", "Legislative")
+tur_leg18$weird = countryname(tur_leg18$country)
+false_name = c("New Zeland", "United Arab Order.")
+right_name = c("New Zealand", "United Arab Emirates")
+for (i in seq_along(false_name)){
+  tur_leg18$weird[tur_leg18$country == false_name[i]] = right_name[i]
+}
+
+tur_leg18$country = countryname(tur_leg18$weird)
+tur_leg18 = tur_leg18[-31]
+
+## Presidential 2014
+
+tur_pres14 = read_xlsx("turkey/modified_files/turkey_pres_2014.xlsx")
+tur_pres14 = tur_pres14[-c(1, 5,6)]
+
+names(tur_pres14)[1:5] = c("country", "registered_voters", "total_votes", "valid_votes", "invalid_votes")
+str(tur_pres14)
+tur_pres14 = main_function(tur_pres14, "AKP", "CHP / MHP", 6, "AKP")
+tur_pres14 = extra_cols(tur_pres14, "Turkey", "2014-08-10", "Presidential")
+tur_pres14$weird = countryname(tur_pres14$country)
+tur_pres14$weird[tur_pres14$country == "New Zeland"] = "New Zealand"
+tur_pres14$country = countryname(tur_pres14$weird)
+tur_pres14 = tur_pres14[-17]
+
+## Presidential 2018
+tur_pres18 = read_xlsx("turkey/modified_files/turkey_pres_2018.xlsx")
+tur_pres18 = tur_pres18[-c(4,5)]
+names(tur_pres18)[1:5] = c("country", "registered_voters", "total_votes", "valid_votes", "invalid_votes")
+# that every country has a turnout of 100 % seems a bit unrealistic
+names(tur_pres18) = iconv(names(tur_pres18), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_pres18 = main_function(tur_pres18, "CHP", "VATAN", 6, "AKP")
+tur_pres18 = extra_cols(tur_pres18, "Turkey", "2018-06-24", "Presidential")
+tur_pres18$country = iconv(tur_pres18$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+tur_pres18$weird = countrycode(tolower(tur_pres18$country), 'turkish', 'english', custom_dict = custom_dict)
+turkish = unlist(str_split("amerika birlesik dev., birlesik arap emir., cek cumhuriyeti, cin halk cumhuriyeti, iran, irlanda, ispanya, israil, isvec, isvicre, italya, kuzey kibris turk cum., makedonya, rusya federasyonu", ", "))
+# again same as above 
+
+for (i in seq_along(turkish)){
+  tur_pres18$weird[tolower(tur_pres18$country) == turkish[i]] = english[i]
+}
+
+tur_pres18$country = countryname(tur_pres18$weird)
+tur_pres18 = tur_pres18[-23]
+
+
+## Serbia
+
+#Legislative
+
+file = "Serbia/Parliament 2012-2020 ENG.XLS"
+
+# 2012
+
+ser_leg12 = read_xls(file, sheet = 4)
+
 
