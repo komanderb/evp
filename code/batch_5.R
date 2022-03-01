@@ -375,6 +375,126 @@ file = "Serbia/Parliament 2012-2020 ENG.XLS"
 
 # 2012
 
-ser_leg12 = read_xls(file, sheet = 4)
+ser_leg12 = read_xls(file, sheet = 4) 
+ser_leg12 = row_to_names(ser_leg12, 1)
+ser_leg12 = ser_leg12[grepl('', names(ser_leg12))]
+ser_leg12 = ser_leg12[-1,]
+serbia_names = names(ser_leg12)
+ser_leg12[2:27] = lapply(ser_leg12[2:27], function(y) as.numeric(y))
+ser_leg12 = aggregate(c(ser_leg12[2:27]), by = ser_leg12[1], sum)
+serbia_names = trimws(iconv(serbia_names, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
+names(ser_leg12) = serbia_names
+ser_leg12 = ser_leg12[-c(2,5:7)]
+names(ser_leg12)[1:5] = c('country', 'registered_voters', 'total_votes', 'invalid_votes',
+                          'valid_votes')
+ser_leg12$country = countryname(ser_leg12$country)
+str(ser_leg12)
+# this might be a bit weird -> wikipedia indicates a different party name for the winner (which is not in the list)
+ser_leg12 = main_function(ser_leg12, "Choice for a Better Life - Boris Tadic", "None of The Above", 6, "Let's Get Serbia Moving - Tomislav Nikolic")
+ser_leg12 = extra_cols(ser_leg12, "Serbia", "2012-05-06", "Legislative")
+
+
+## 2014 legislative
+ser_leg14 = read_xls(file, sheet = 3)
+ser_leg14 = row_to_names(ser_leg14, 1)
+ser_leg14 = ser_leg14[grepl('', names(ser_leg14))]
+ser_leg14 = ser_leg14[-1,]
+ser_leg14 = ser_leg14[-c(2, 5:7)]
+serbia_names = names(ser_leg14)
+ser_leg14[2:24] = lapply(ser_leg14[2:24], function(y) as.numeric(y))
+ser_leg14 = aggregate(c(ser_leg14[2:24]), by = ser_leg14[1], sum)
+serbia_names = trimws(iconv(serbia_names, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
+names(ser_leg14) = serbia_names
+names(ser_leg14)[1:5] = c('country', 'registered_voters', 'total_votes', 'invalid_votes',
+                          'valid_votes')
+
+ser_leg14$country = countryname(ser_leg14$country)
+ser_leg14 = main_function(ser_leg14, "ALEKSANDAR VUCIC\n- SNS, SDPS, NS, SPO, SP", "PARTY OF DEMOCRATIC ACTION -\nRIZA HALIMI", 6, "ALEKSANDAR VUCIC\n- SNS, SDPS, NS, SPO, SP")
+ser_leg14 = extra_cols(ser_leg14, "Serbia", "2014-03-16", "Legislative")
+
+# 2016 legislative
+ser_leg16 = read_xls(file, sheet = 2) 
+ser_leg16 = row_to_names(ser_leg16, 1)
+
+ser_leg16 = ser_leg16[-c(2, 4,5,7)]
+names(ser_leg16)[1:5] = c('country', 'registered_voters', 'total_votes', 'invalid_votes',
+                          'valid_votes')
+
+serbia_names = names(ser_leg16)
+ser_leg16[2:25] = lapply(ser_leg16[2:25], function(y) as.numeric(y))
+ser_leg16 = aggregate(c(ser_leg16[2:25]), by = ser_leg16[1], sum)
+serbia_names = trimws(iconv(serbia_names, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
+names(ser_leg16) = serbia_names
+
+ser_leg16$country = countryname(ser_leg16$country)
+ser_leg16 = main_function(ser_leg16,  "ALEKSANDAR VUCIC - SERBIA IS WINNING", "IN DEFIANCE - UNITED FOR SERBIA - PEOPLE'S ALLIANCE", 6, 
+                          "ALEKSANDAR VUCIC - SERBIA IS WINNING")
+
+ser_leg16 = extra_cols(ser_leg16, "Serbia", "2016-04-24", "Legislative")
+
+
+## Presidential
+
+file = "C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Serbia/Presidental 2012-2017 ENG.XLS"
+
+ser_pres12 = read_xls(file, sheet = 2)
+
+ser_pres12 = row_to_names(ser_pres12, 1)
+ser_pres12 = ser_pres12[grepl('', names(ser_pres12))]
+ser_pres12 = ser_pres12[-1,]
+ser_pres12 = ser_pres12[-c(2,5:7)]
+names(ser_pres12)[1:5] = c('country', 'registered_voters', 'total_votes', 'invalid_votes',
+                          'valid_votes')
+serbia_names = names(ser_pres12)
+ser_pres12[2:17] = lapply(ser_pres12[2:17], function(y) as.numeric(y))
+ser_pres12 = aggregate(c(ser_pres12[2:17]), by = ser_pres12[1], sum)
+serbia_names = trimws(iconv(serbia_names, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
+names(ser_pres12) = serbia_names
+ser_pres12$country = countryname(ser_pres12$country)
+ser_pres12 = main_function(ser_pres12, "Prof. Dr. Zoran Stankovic", "Tomislav Nikolic", 6, "Boris Tadic")
+# note: Boris Tadic won first round (very close) but lost second round //
+ser_pres12 = extra_cols(ser_pres12, "Serbia", "2012-05-06", "Presidential")
+
+# Presidential 2017
+
+ser_pres17 = read_xls(file, sheet = 1)
+ser_pres17 = row_to_names(ser_pres17, 1)
+
+ser_pres17 = ser_pres17[-c(2,4,5,7)]
+names(ser_pres17)[1:5] = c('country', 'registered_voters', 'total_votes', 'invalid_votes',
+                           'valid_votes')
+serbia_names = names(ser_pres17)
+ser_pres17[2:16] = lapply(ser_pres17[2:16], function(y) as.numeric(y))
+ser_pres17 = aggregate(c(ser_pres17[2:16]), by = ser_pres17[1], sum)
+serbia_names = trimws(iconv(serbia_names, from = 'UTF-8', to = 'ASCII//TRANSLIT'))
+names(ser_pres17) = serbia_names
+ser_pres17$country = countryname(ser_pres17$country)
+ser_pres17 = main_function(ser_pres17, "Sasa Jankovic", "Nenad Canak", 6, "Aleksandar Vucic")
+ser_pres17 = extra_cols(ser_pres17, "Serbia", "2017-04-02", "Presidential")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
