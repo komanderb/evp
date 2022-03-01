@@ -473,12 +473,23 @@ ser_pres17 = main_function(ser_pres17, "Sasa Jankovic", "Nenad Canak", 6, "Aleks
 ser_pres17 = extra_cols(ser_pres17, "Serbia", "2017-04-02", "Presidential")
 
 
+##### Dataframe for Batch ------------------------------------------------------
+## As requested this will update as I go
+geol_16 = add_column(geol_16, registered_voters = NA, .after = 'election_type')
+geol_16 = add_column(geol_16, total_votes = NA, .after = 'registered_voters')
+geol_16 = add_column(geol_16, null_votes = NA, .after = 'total_votes')
+geol_16 = add_column(geol_16, blanco_votes = NA, .after = 'null_votes')
+geol_16 = add_column(geol_16, invalid_votes = NA, .after = 'blanco_votes')
 
 
+batch_5 = bind_rows(geol_16, geol_12, geol_04, geop_08, geop_13, geop_18,
+                    tur_leg15, tur_leg15_nov, tur_leg18, tur_pres14, tur_pres18,
+                    ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17)
 
 
+write.csv(batch_5, 'batch_5.csv', row.names = F)
 
-
+df_coo = bind_rows(geol_16_coo, geol_12_coo, geop_13_coo, geop_18_coo)
 
 
 
