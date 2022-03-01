@@ -601,7 +601,7 @@ country_list = countries.find_elements_by_tag_name('li')
 countries = []
 for i in country_list:
     countries.append(i.text)
-
+#g
 def bul_scraper(link, country_list):
     countries = []
     df_list = []
@@ -636,3 +636,15 @@ df_party = df_party.iloc[:, 0:2]
 # did some modifications by hand. 
 
 df_party.to_csv('bu_pres_2011_dic.csv')
+
+
+### Ukraine
+url = "https://www.cvk.gov.ua/pls/vnd2002/webproc193vb639.html?kodvib=400"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+table = browser.find_element_by_xpath('/html/body/table[4]')
+df = pd.read_html(table.get_attribute('outerHTML'))[0]
+df.to_csv('ukraine_leg_2002')
+
+### ukraine 
