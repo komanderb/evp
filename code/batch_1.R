@@ -105,112 +105,61 @@ frPres_17 <- column_sorter(frPres_17, 3, 24)
 frPres_17 <- national_winner(frPres_17, frPres_17_nw)
 
 ## France Leg 2012
-for (i in 1:11){
-  assign(paste0("frLeg_12_", i), read_xls("France/Leg. 2012/France Leg. 2012 Raw Data.xls", sheet = i))
-}
-# manipulating every single df because they are all unique in their size
-#(not very beautiful)
-dic_1 <- frLeg_12_1[4, c(6:23)]
-frLeg_12_1 <- frLeg_12_1[-c(3:8),]
-dic_2 <- frLeg_12_2[27, c(6:17)]
-frLeg_12_2 <- frLeg_12_2[-c(26:28),]
-dic_3 <- frLeg_12_3[12, c(6:21)]
-frLeg_12_3 <- frLeg_12_3[-c(11:14),]
-dic_4 <- frLeg_12_4[5, c(6:21)]
-frLeg_12_4 <- frLeg_12_4[-c(4:7),]
-dic_5 <- frLeg_12_5[6, c(6:18)]
-frLeg_12_5 <- frLeg_12_5[-c(5:8),]
-dic_6 <- frLeg_12_6[3, c(6:26)]
-frLeg_12_6 <- frLeg_12_6[-c(2:5),]
-dic_7 <- frLeg_12_7[18, c(6:20)]
-frLeg_12_7 <- frLeg_12_7[-c(17:21),]
-dic_8 <- frLeg_12_8[9, c(6:15)]
-frLeg_12_8 <- frLeg_12_8[-c(8:12),]
-dic_9 <- frLeg_12_9[15, c(6:19)]
-frLeg_12_9 <- frLeg_12_9[-c(14:18),]
-dic_10 <- frLeg_12_10[45, c(6:24)]
-frLeg_12_10 <- frLeg_12_10[-c(44:47),]
-dic_11 <- frLeg_12_11[40, c(6:26)]
-frLeg_12_11 <- frLeg_12_11[-c(39:43),]
-# rename country column 
-frLeg_12_1 <- renamer(frLeg_12_1, 1)
-frLeg_12_2 <- renamer(frLeg_12_2, 1)
-frLeg_12_3 <- renamer(frLeg_12_3, 1)
-frLeg_12_4 <- renamer(frLeg_12_4, 1)
-frLeg_12_5 <- renamer(frLeg_12_5, 1)
-frLeg_12_6 <- renamer(frLeg_12_6, 1)
-frLeg_12_7 <- renamer(frLeg_12_7, 1)
-frLeg_12_8 <- renamer(frLeg_12_8, 1)
-frLeg_12_9 <- renamer(frLeg_12_9, 1)
-frLeg_12_10 <- renamer(frLeg_12_10, 1)
-frLeg_12_11 <- renamer(frLeg_12_11, 1)
-# doing the 'normal steps' for every dataframe
-# I could have been more accurate 
-frLeg_12_1[-1] <- lapply(frLeg_12_1[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_1 <- slim_fitter(frLeg_12_1, "Karel VEREYCKEN", "Christophe NAVEL")
-#
-frLeg_12_2[-1] <- lapply(frLeg_12_2[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_2 <- slim_fitter(frLeg_12_2, "Françoise LINDEMANN", "Thérèse MARIANNE-PEPIN")
-frLeg_12_3[-1] <- lapply(frLeg_12_3[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_3 <- slim_fitter(frLeg_12_3,  "Guy LE GUEZENNEC", "Edith TIXIER")
-frLeg_12_4[-1] <- lapply(frLeg_12_4[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_4 <- slim_fitter(frLeg_12_4, "Tanguy LE BRETON", "Dominique PAILLE")
-frLeg_12_5[-1] <- lapply(frLeg_12_5[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_5 <- slim_fitter(frLeg_12_5, "Juliette ESTIVILL", "Jean-Bastien URFELS")
-frLeg_12_6[-1] <- lapply(frLeg_12_6[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_6 <- slim_fitter(frLeg_12_6, "Romain DEVOUASSOUX", "Christiane FLOQUET")
-frLeg_12_7[-1] <- lapply(frLeg_12_7[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_7 <- slim_fitter(frLeg_12_7, "Isabelle ROBIN", "Eric BOURGUIGNON")
-frLeg_12_8[-1] <- lapply(frLeg_12_8[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_8 <- slim_fitter(frLeg_12_8, "Gil TAIEB", "Julien LEMAITRE")
-frLeg_12_9[-1] <- lapply(frLeg_12_9[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_9 <- slim_fitter(frLeg_12_9, "Bertrand VITU", "Zine-Eddine M'JATI")
-frLeg_12_10[-1] <- lapply(frLeg_12_10[-1], function(y) as.numeric(as.character(y)))
-frLeg_12_10 <- slim_fitter(frLeg_12_10, "Guy MAKKI", "Marcel MISSLIN")
-frLeg_12_11 <- frLeg_12_11[-c(26)]
-frLeg_12_11[-1] <- lapply(frLeg_12_11[-1], function(y) as.numeric(as.character(y)))
-# something weird with that column -> same in excel! 
-frLeg_12_11 <- slim_fitter(frLeg_12_11, "Aurélien LESLUYE", "Jean-Loup FAYOLLE")
-names(frLeg_12_1)[4] <- 'participation'
-names(frLeg_12_2)[4] <- 'participation'
-names(frLeg_12_3)[4] <- 'participation'
-names(frLeg_12_4)[4] <- 'participation'
-names(frLeg_12_5)[4] <- 'participation'
-names(frLeg_12_6)[4] <- 'participation'
-names(frLeg_12_7)[4] <- 'participation'
-names(frLeg_12_8)[4] <- 'participation'
-names(frLeg_12_9)[4] <- 'participation'
-names(frLeg_12_10)[4] <- 'participation'
-names(frLeg_12_11)[4] <- 'participation'
-# paste the data  
-frLeg_12 <- do.call("rbind", list(frLeg_12_1, frLeg_12_2, frLeg_12_3, frLeg_12_4, frLeg_12_5, frLeg_12_6,
-                               frLeg_12_7, frLeg_12_8, frLeg_12_9, frLeg_12_10, frLeg_12_11))
-frLeg_12 <- party_sorter(frLeg_12)
-frLeg_12$ph <- looper(frLeg_12)
-# now I would neeed dictionary list and use it
-dic_list = c(dic_1, dic_2, dic_3, dic_4, 
-             dic_5, dic_6, dic_7, dic_8,
-             dic_9, dic_10, dic_11)
-lapply(dic_list, function(x) {
-  pivot_longer(x, everything())} )
-dic_1 %>% pivot_longer(everything())
-dif_dic = NULL
-for (i in c(dic_1, dic_2, dic_3, dic_4, 
-            dic_5, dic_6, dic_7, dic_8,
-            dic_9, dic_10, dic_11)){
-  assign(i, pivot_longer(i, everything()))
-  df_dic = bind_rows(df_dic, i)
-}
-
-
 file = "C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/France/Leg. 2012/france_leg_12_mod.xlsx"
 sheets = c(1:11)
 df_list = lapply(sheets, function(y) read_xlsx(file, sheet = y))
 
 for (i in seq_along(df_list)){
-  df_list[[i]] = row_to_names(df_list[[i]], nrow(df_list[[i]]))
+  last_r = nrow(df_list[[i]])
+  df_list[[i]] = df_list[[i]][c(last_r, 1:(last_r-1)),]
+  df_list[[i]] = row_to_names(df_list[[i]], 1)
 }
-# thats just stupid // 
+
+
+exclude = names(df_list[[5]])[1:5]
+for (i in seq_along(df_list)){
+  df_list[[i]] = df_list[[i]] %>% pivot_longer(cols = -exclude, names_to = "party", values_to = "votes")
+}
+
+fr_12 =  do.call(rbind, df_list)
+fr_12 = fr_12[-4]
+fr_12[c(2:4,6)] = lapply(fr_12[c(2:4,6)], function(y) as.numeric(y))
+fr_12 = fr_12 %>% pivot_wider(names_from = party, values_from = votes, values_fn = sum, values_fill = 0)
+
+fr_12 = fr_12 %>% filter(!(country == "TOTAUX"))
+fr_12 = main_function(fr_12, "AUT", "Indep.", 5, "PS")
+fr_12 = extra_cols(fr_12, "France", "2012-06-10", "Legislative")
+#maybe problematic as AUT is same as Autre and also independent? 
+custom_dict$french = iconv(custom_dict$french, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+fr_12$weird = countrycode(tolower(fr_12$country), "french", "english", custom_dict = custom_dict)
+french = unlist(str_split("birmanie, brunei, cap vert, centrafricaine (republique), congo, congo (republique democratique), coree, cote d`ivoire, dominicaine (republique), el salvador, etats-unis d`amerique, guinee bissau, jamaïque, jerusalem, macedoine, papouasie nouvelle-guinee, royaume uni, surinam, tcheque (republique), trinite et tobago", ", "))
+english = c("Myanmar",
+             "brunei",
+             "cape verde",
+             "Central African Republic",
+             "congo",
+             "congo democratic republic",
+             "korea",
+             "ivory coast",
+             "Dominican republic",
+             "el salvador",
+             "united states of america",
+             "guinea bissau",
+             "jamaica",
+             "palestine",
+             "macedonia",
+             "papua new guinea",
+             "united kingdom",
+             "suriname",
+             "czech republic",
+             "trinidad and tobago")
+
+for (i in seq_along(french)){
+  fr_12$weird[tolower(fr_12$country) == french[i]] = english[i]
+}
+
+fr_12$country = countryname(fr_12$weird)
+fr_12 = fr_12[-42]
 
 ## France Legislative 2017
 #the file was damaged so had to take a longer approach
@@ -865,8 +814,11 @@ CroPres_05_nw <- CroPres_05_nw[c(1,6,7)]
 CroPres_05 <- my_pivoter(CroPres_05)
 CroPres_05 <- column_sorter(CroPres_05, 6, 31)
 CroPres_05 <- national_winner(CroPres_05, CroPres_05_nw)
+# this is a redo which might blow up some code below if try to rerun 
+custom_dict$croatia = iconv(custom_dict$croatia, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+CroPres_05$country =  iconv(CroPres_05$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
 CroPres_05$weird <- countrycode(tolower(CroPres_05$country), 'croatia', 'english', custom_dict = custom_dict)
-CroPres_05$weird[tolower(CroPres_05$country) == 'ceška republika'] <- 'Czechia'
+CroPres_05$weird[tolower(CroPres_05$country) == 'ceska republika'] <- 'Czechia'
 CroPres_05$weird[tolower(CroPres_05$country) == 'makedonija'] <- "North Macedonia"
 CroPres_05$weird[tolower(CroPres_05$country) == 'ruska federacija'] <- 'Russia'
 CroPres_05$weird[tolower(CroPres_05$country) == 'sad'] <- "US"
@@ -877,7 +829,7 @@ CroPres_05$weird[tolower(CroPres_05$country) == 'venecuela'] <-  "Venezuela"
 CroPres_05$weird <- countryname(CroPres_05$weird)
 CroPres_05$country <- CroPres_05$weird
 CroPres_05 <- CroPres_05[-c(34)]
-
+CroPres_05$country[is.na(CroPres_05$country)] = "Diaspora U RH"
 ## Presidential 2009 
 CroPres_09 <- read_xlsx("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Croatia/Pres.2009/rezultati_po_bm_1krug.xlsx")
 CroPres_09 <- CroPres_09 %>% filter(`Rbr. županije` == 22)
@@ -1114,12 +1066,16 @@ CoLeg_18$weird[CoLeg_18$country == toupper('paises bajos')] <- "Netherlands"
 CoLeg_18$weird[CoLeg_18$country == toupper('panama')] <- 'Panama'
 CoLeg_18$weird[CoLeg_18$country == toupper('peru')] <- 'Peru'
 CoLeg_18$weird[CoLeg_18$country == toupper('republica de filipinas')] <- "Philippines"
-CoLeg_18$weird[CoLeg_18$country == toupper(' republica de singapur')] <- 'Singapore'
+CoLeg_18$weird[CoLeg_18$country == toupper('republica de singapur')] <- 'Singapore'
 CoLeg_18$weird[CoLeg_18$country == toupper('republica dominicana')] <- "Dominican Republic"
 CoLeg_18$weird[CoLeg_18$country == toupper('sudafrica')] <- "South Africa"
 CoLeg_18$weird[CoLeg_18$country == toupper('turquia')] <- 'Turkey'
 CoLeg_18$country <- countryname(CoLeg_18$weird)
 CoLeg_18 <- CoLeg_18[-c(95)]
+
+## also a bit problematic as some columns are just not complete
+CoLeg_18$national_winner = "PARTIDO LIBERAL COLOMBIANO"
+CoLeg_18$votes_national_winner[is.na(CoLeg_18$votes_national_winner)] = 0
 
 ## Pres 2018 first round
 CoPres_18 <- read.csv("Colombia/Colombia Pres. 2018/Raw Sources/2018_PRESIDENTE_Y_VICEPRESIDENTE_DE_LA_REPUBLICA_PRIMERA_VUELTA CONSULADOS.csv", sep = ";")
@@ -1180,49 +1136,52 @@ CoPres_18 <- CoPres_18[-c(25)]
 # going through longest structure and doing election ID
 # but election id is not unique
 
-frPres_07 <- elecid_gen(frPres_07, 'FRA', '07', 'P') 
-frPres_12 <- elecid_gen(frPres_12, 'FRA', '12', 'P')
-frPres_17 <- elecid_gen(frPres_17, 'FRA', '17', 'P')
-RoPres_09 <- elecid_gen(RoPres_09, 'ROU', '09', 'P')
-RoPres_14 <- elecid_gen(RoPres_14, 'ROU', '14', 'P')
+frPres_07 <- extra_cols(frPres_07, "France", "2007-04-22", "Presidential")
+frPres_12 <- extra_cols(frPres_12, "France", "2012-04-22", "Presidential")
+frPres_17 <- extra_cols(frPres_17, "France", "2017-04-23", "Presidential")
+RoPres_09 <- extra_cols(RoPres_09, "Romania", "2009-11-22", "Presidential")
+RoPres_14 <- extra_cols(RoPres_14, "Romania", "2014-11-02", "Presidential")
 names(RoLeg_12)[6] <- 'blanco_votes'
-RoLeg_12 <- elecid_gen(RoLeg_12, 'ROU', '12', 'L')
-BoGe_09 <- elecid_gen(BoGe_09, "BOL", '09', 'G')
-BoGe_14 <- elecid_gen(BoGe_14, 'BOL', '14', 'G')
-BuPres_16 <- elecid_gen(BuPres_16, "BGR", '16', 'P')
-BuLeg_14 <- elecid_gen(BuLeg_14, "BGR", '14', 'L')
-BuLeg_17 <- elecid_gen(BuLeg_17, "BGR", '17', 'L')
-CrPres_18 <- elecid_gen(CrPres_18, 'CRI', '18', 'P')
-BraPres_18 <- elecid_gen(BraPres_18, 'BRA', '18', 'P')
-BraPres_14 <- elecid_gen(BraPres_14, 'BRA', '14', 'P')
-BraPres_10 <- elecid_gen(BraPres_10, 'BRA', '10', 'P')
-BraPres_06 <- elecid_gen(BraPres_06, 'BRA', '06', 'P')
-CroParl_03 <- elecid_gen(CroParl_03, "HRV", '03', 'L')
-CroParl_07 <- elecid_gen(CroParl_07, "HRV", '07', 'L')
-CroParl_11 <- elecid_gen(CroParl_11, "HRV", '11', 'L')
-CroParl_15 <- elecid_gen(CroParl_15, "HRV", '15', 'L')
-CroParl_16 <- elecid_gen(CroParl_16, "HRV", '16', 'L')
-CroPres_05 <- elecid_gen(CroPres_05, "HRV", '05', 'P')
-CroPres_09 <- elecid_gen(CroPres_09, "HRV", '09', 'P')
-CroPres_14 <- elecid_gen(CroPres_14, "HRV", '14', 'P')
-CroPres_19 <- elecid_gen(CroPres_19, "HRV", '19', 'P')
-DorPres_04 <- elecid_gen(DorPres_04, "DOM", '04', 'P')
-DorPres_08 <- elecid_gen(DorPres_08, "DOM", '08', 'P')
-DorPres_12 <- elecid_gen(DorPres_12, "DOM", '12', 'P')
-DorPres_16 <- elecid_gen(DorPres_16, "DOM", '16', 'P')
-DorLeg_12 <- elecid_gen(DorLeg_12, "DOM", '12', 'L')
-CoLeg_18 <- elecid_gen(CoLeg_18, "COL", '18', 'L')
-CoPres_18 <- elecid_gen(CoPres_18, "COL", '18', 'P')
+RoLeg_12 <- extra_cols(RoLeg_12, "Romania", "2012-12-09", "Legislative")
+BoGe_09 <- extra_cols(BoGe_09, "Bolivia", "2009-12-06", "General")
+BoGe_14 <- extra_cols(BoGe_14, "Bolivia", "2014-10-12", "General")
+BuPres_16 <- extra_cols(BuPres_16, "Bulgaria", "2016-11-06", "Presidential")
+BuLeg_14 <- extra_cols(BuLeg_14, "Bulgaria", "2014-10-05", "Legislative")
+BuLeg_17 <- extra_cols(BuLeg_17, "Bulgaria", "2017-03-26", "Legislative")
+CrPres_18 <- extra_cols(CrPres_18, "Costa Rica", "2018-02-04", "Presidential")
+BraPres_18 <- extra_cols(BraPres_18, "Brazil", "2018-10-07", "Presidential")
+BraPres_14 <- extra_cols(BraPres_14, "Brazil", "2014-10-05", "Presidential")
+BraPres_10 <- extra_cols(BraPres_10, "Brazil", "2010-10-03", "Presidential")
+BraPres_06 <- extra_cols(BraPres_06, "Brazil", "2006-10-01", "Presidential")
+CroParl_03 <- extra_cols(CroParl_03, "Croatia", "2003-11-23", "Legislative")
+CroParl_07 <- extra_cols(CroParl_07, "Croatia", "2007-11-25", "Legislative")
+CroParl_11 <- extra_cols(CroParl_11, "Croatia", "2011-12-04", "Legislative")
+CroParl_15 <- extra_cols(CroParl_15, "Croatia", "2015-11-08", "Legislative")
+CroParl_16 <- extra_cols(CroParl_16, "Croatia", "2016-09-11", "Legislative")
+CroPres_05 <- extra_cols(CroPres_05, "Croatia", "2005-01-02", "Presidential")
+CroPres_09 <- extra_cols(CroPres_09, "Croatia", "2009-12-27", "Presidential")
+CroPres_14 <- extra_cols(CroPres_14, "Croatia", "2014-12-28", "Presidential")
+CroPres_19 <- extra_cols(CroPres_19, "Croatia", "2019-12-22", "Presidential")
+DorPres_04 <- extra_cols(DorPres_04, "Dominican Republic", "2004-05-16", "Presidential")
+DorPres_08 <- extra_cols(DorPres_08, "Dominican Republic", "2008-05-16", "Presidential")
+DorPres_12 <- extra_cols(DorPres_12, "Dominican Republic", "2012-05-20", "Presidential")
+DorPres_16 <- extra_cols(DorPres_16, "Dominican Republic", "2016-05-15", "Presidential")
+DorLeg_12 <- extra_cols(DorLeg_12, "Dominican Republic", "2012-05-20", "Legislative")
+CoLeg_18 <- extra_cols(CoLeg_18, "Colombia", "2018-03-11", "Legislative")
+CoPres_18 <- extra_cols(CoPres_18, "Colombia", "2018-05-27", "Presidential")
 
-CoLeg_18 <- add_column(CoLeg_18, registered_voters = NA, .after = 'country')
+CoLeg_18 <- add_column(CoLeg_18, registered_voters = NA, .after = 'election_type')
+CoPres_18$national_winner = "PARTIDO CENTRO DEMOCRÃ\u0081TICO"
+CoPres_18$national_winner[is.na(CoPres_18$national_winner)] = 0
 names(DorPres_16)[3] <- 'registered_voters'
 DorPres_16 <- DorPres_16[-c(77)]
-final_df <- bind_rows(CoLeg_18, CoPres_18, frPres_07, frPres_12, frPres_17,
+batch_1 <- bind_rows(CoLeg_18, CoPres_18, frPres_07, frPres_12, frPres_17,
                       RoPres_09, RoPres_14, RoLeg_12, BoGe_09, BoGe_14,
                       BuPres_16, BuLeg_14, BuLeg_17, CrPres_18, BraPres_06, BraPres_10,
                       BraPres_14, BraPres_18, CroParl_03, CroParl_07, CroParl_11, CroParl_15, CroParl_16,
                       CroPres_05, CroPres_09, CroPres_14, CroPres_19, DorPres_04, DorPres_08, DorPres_12, DorPres_16,
-                      DorLeg_12)
-final_df <- add_column(final_df, iso3c = countrycode(final_df$country, 'country.name', 'iso3c'), .after = 'country')
-names(final_df)[2] <- 'host_country'
-write.csv(final_df,"evp_v1.csv", row.names = FALSE)
+                      DorLeg_12, fr_12, fr_17)
+#final_df <- add_column(final_df, iso3c = countrycode(final_df$country, 'country.name', 'iso3c'), .after = 'country')
+write.csv(batch_1,"batch_1.csv", row.names = FALSE)
+# apparently for legislative croatia 2011 national winner is not included in data??
+

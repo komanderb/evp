@@ -17,6 +17,7 @@ library(rvest)
 library(maps)
 library(uchardet)
 library(ggmap)
+library(splitstackshape)
 # Setting working directory 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
 
@@ -244,7 +245,10 @@ geop_18_coo = extra_cols(geop_18_coo, "Georgia", "2018-10-28", "Presidential")
 
 #### Macedonia -----------------------------------------------------------------
 
+mac_1 = read.csv("macedonia_2016_1.csv", encoding = "UTF-8")
+mac_2 = read.csv("macedonia_2016_2.csv", encoding = "UTF-8")
 
+unique(mac_1$pol_stat)
 #### Moldova -------------------------------------------------------------------
 
 
@@ -367,7 +371,7 @@ tur_pres18$country = countryname(tur_pres18$weird)
 tur_pres18 = tur_pres18[-23]
 
 
-## Serbia
+#### Serbia--------------------------------------------------------------------
 
 #Legislative
 
@@ -471,8 +475,158 @@ names(ser_pres17) = serbia_names
 ser_pres17$country = countryname(ser_pres17$country)
 ser_pres17 = main_function(ser_pres17, "Sasa Jankovic", "Nenad Canak", 6, "Aleksandar Vucic")
 ser_pres17 = extra_cols(ser_pres17, "Serbia", "2017-04-02", "Presidential")
+##### Ukraine ------------------------------------------------------------------
+
+ukr_leg12 = read.csv("ukraine_leg_12.csv", encoding = "UTF-8")
+ukr_leg12 = ukr_leg12 %>% filter(!(X4 == 'Number of votes "FOR" party'))
+ukr_leg12 = ukr_leg12[-c(1,3,5,6)]
+ukr_leg12[3] = lapply(ukr_leg12[3], function(y) as.numeric(y))
+ukr_leg12$X4[is.na(ukr_leg12$X4)] = 0
+ukr_leg12 = ukr_leg12 %>% pivot_wider(names_from = X1, values_from = X4)
+ukr_leg12$weird = countryname(ukr_leg12$country)
+wrong_names = unlist(str_split("Italian Republic, Lebanese Republic, Portuguese Republic", ", "))
+right_names = c('Italy', 'Lebanon', 'Portugal')
+for (i in seq_along(wrong_names)){
+  ukr_leg12$weird[ukr_leg12$country == wrong_names[i]] = right_names[i]
+}
+ukr_leg12$country = countryname(ukr_leg12$weird)
+ukr_leg12 = ukr_leg12[-c(23)]
+ukr_leg12 = add_column(ukr_leg12, valid_votes = rowSums(ukr_leg12[2:22]), .after = 'country')
+ukr_leg12 = main_function(ukr_leg12, 'PARTY OF REGIONS', 'politychna partiia Ukrainska Natsionalna Asambleia', 3, "PARTY OF REGIONS")
+ukr_leg12 = extra_cols(ukr_leg12, "Ukraine", "2012-10-28", "Legislative")
 
 
+### Legislative 2014
+ukr_leg14 = read.csv("ukraine_leg_14.csv", encoding = "UTF-8")
+ukr_leg14 = ukr_leg14 %>% filter(!(X4 == 'Number of votes "FOR" party'))
+ukr_leg14 = ukr_leg14[-c(1,3,5,6)]
+ukr_leg14[3] = lapply(ukr_leg14[3], function(y) as.numeric(gsub(" ", "", y)))
+ukr_leg14$X4[is.na(ukr_leg14$X4)] = 0
+ukr_leg14 = ukr_leg14 %>% pivot_wider(names_from = X1, values_from = X4)
+unique(ukr_leg14$country)
+# now this is a bit funny as some kyrillic names remained
+kyrillic = c("Азербайджан",               
+             "Беларусь",                                
+             "Болгария",                               
+             "Грузия",
+             "Киргизская Республика",
+             "Латвийская Республика",                 
+             "Республика Армения",
+             "Республика Молдова",                 
+             "Республика Узбекистан",                
+             "Республіка Казахстан",
+             "Российская Федерация" ,
+             "Туркменистан")
+english = c("Azerbaijan",
+            "Belarus",
+            "Bulgaria",
+            "Georgia",
+            "Kyrgyz Republic",
+            "Latvian republic" ,
+            "Republic of Armenia",
+            "The Republic of Moldova",
+            "The Republic of Uzbekistan",
+            "Republic of Kazakhstan",
+            "The Russian Federation" ,
+            "Turkmenistan")
+
+for (i in seq_along(kyrillic)){
+  ukr_leg14$country[ukr_leg14$country == kyrillic[i]] = english[i]
+}
+ukr_leg14$weird = countryname(ukr_leg14$country)
+wrong_names = unlist(str_split("Italian Republic, Portuguese Republic, Republic of Makedonia, Republika Srbija", ", "))
+right_names = c("Italy", "Portugal", "North Macedonia", "Serbia")
+for (i in seq_along(wrong_names)){
+  ukr_leg14$weird[ukr_leg14$country == wrong_names[i]] = right_names[i]
+}
+ukr_leg14$country = countryname(ukr_leg14$weird)
+ukr_leg14 = ukr_leg14[-31]
+ukr_leg14 = add_column(ukr_leg14, valid_votes = rowSums(ukr_leg14[2:30]), .after = "country")
+ukr_leg14 = main_function(ukr_leg14, "Political party SAMOPOMICH Union", 'Politychna partiia "NOVA POLITYKA"', 3, 'Political party "NARODNYY FRONT"')
+ukr_leg14 = extra_cols(ukr_leg14, "Ukraine", "2014-10-26", "Legislative")
+
+### Legislative 2019
+
+ukr_leg19 = read.csv("ukraine_leg_2019.csv", encoding = "UTF-8")
+ukr_leg19 = ukr_leg19[-c(1,3,5,6)]
+names(ukr_leg19)[2:3] = c("party", "votes")
+
+kyrilic = unique(ukr_leg19$party)
+for(i in kyrilic)
+  print(i)
+
+english = c("EUROPEAN SOLIDARITY POLITICAL PARTY",
+            "POLITICAL PARTYSERVANT OF THE PEOPLE",
+            "VOICE Political Party",
+            "POLITICAL PARTY SHARIYA PARTY",
+            "political party All-Ukrainian Union Freedom",
+            "Mikheil Saakashvili's New Forces Movement Political Party",
+            "POLITICAL PARTY POWER AND HONOR",
+            "OPPOSITION BLOC Political Party",
+            "POLITICAL PARTY SOCIAL JUSTICE",
+            "POLITICAL PARTY PARTY OF THE GREEN OF UKRAINE",
+            "People's Power Political Party",
+            "Political Party PATRIOT",
+            "Agrarian Party of Ukraine",
+            "POLITICAL PARTY POWER OF LAW",
+            "POLITICAL PARTY UKRAINIAN GROISMAN'S STRATEGY",
+            "INDEPENDENCE POLITICAL PARTY",
+            "Batkivshchyna All-Ukrainian Union Political Party",
+            "POLITICAL PARTY ALL-UKRAINIAN ASSOCIATION TORCH",
+            "POLITICAL PARTY RADICAL PARTY OF OLEH LYASHKO",
+            "Civic Position political party",
+            "Political Party OPPOSITION PLATFORM - FOR LIFE",
+            "Political Party Association SELF-HELP")
+
+for (i in seq_along(kyrilic)){
+  ukr_leg19$party[ukr_leg19$party == kyrilic[i]] = english[i]
+}
+
+ukr_leg19[3] = lapply(ukr_leg19[3], function(y) as.numeric(gsub(" ", "", y)))
+ukr_leg19$votes[is.na(ukr_leg19$votes)] = 0
+ukr_leg19 = ukr_leg19 %>% pivot_wider(names_from = party, values_from = votes)
+ukr_leg19 = add_column(ukr_leg19, valid_votes = rowSums(ukr_leg19[2:23]), .after = "country")
+ukr_leg19$weird = countryname(ukr_leg19$country)
+wrong_names = unlist(str_split("Italian Republic, Mexican United States, Portuguese Republic", ", "))
+right_names = c("Italy", "Mexico", "Portugal")
+for (i in seq_along(wrong_names)){
+  ukr_leg19$weird[ukr_leg19$country == wrong_names[i]] = right_names[i]
+}
+
+ukr_leg19$country = countryname(ukr_leg19$weird)
+ukr_leg19 = ukr_leg19[-25]
+ukr_leg19 = main_function(ukr_leg19, "EUROPEAN SOLIDARITY POLITICAL PARTY", "Political Party Association SELF-HELP", 3, "POLITICAL PARTYSERVANT OF THE PEOPLE")
+ukr_leg19 = extra_cols(ukr_leg19, "Ukraine", "2019-07-21", "Legislative")
+
+
+### Presidential:
+
+#2010
+
+ukr_pres10 = read_xlsx("Ukraine/ukraine2010pres.xlsx")
+ukr_pres10_polst = read.csv("ukraine_pres_2010_polstat.csv", encoding = 'UTF-8')
+ukr_pres10_polst = row_to_names(ukr_pres10_polst, 1)
+ukr_pres10_polst = cSplit(ukr_pres10_polst, "Precinct  numbers", sep=",", "long")
+ukr_pres10_polst = ukr_pres10_polst[,-c(1,3)]
+ukr_pres10$Precincts = countrycode(ukr_pres10$Precincts, "Precinct  numbers", "Country", custom_dict = ukr_pres10_polst)
+ukr_pres10[2:23] = lapply(ukr_pres10[2:23], function(y) as.numeric(y))
+ukr_pres10 = aggregate(c(ukr_pres10[2:23]), by = ukr_pres10[1], sum)
+names(ukr_pres10)[c(1:4, 23)] = c("country", "registered_voters", "total_votes", "invalid_votes", "not_supported")
+ukr_pres10 = add_column(ukr_pres10, valid_votes = rowSums(ukr_pres10[5:23]), .after = "total_votes")
+ukr_pres10$weird = countryname(ukr_pres10$country)
+wrong_names = unlist(str_split("Italian Republic, Mexican United States, Portuguese Republic", ", "))
+right_names = c("Italy", "Mexico", "Portugal")
+for (i in seq_along(wrong_names)){
+  ukr_pres10$weird[ukr_pres10$country == wrong_names[i]] = right_names[i]
+}
+ukr_pres10$country = countryname(ukr_pres10$weird)
+ukr_pres10 = ukr_pres10[-25]
+ukr_pres10 = main_function(ukr_pres10, "Theological", "not_supported", 6, "Yanukovych")
+ukr_pres10 = extra_cols(ukr_pres10, "Ukraine", "2010-01-17", "Presidential")
+
+#2014
+ukr_pres14 = read_xlsx("Ukraine/ukraine2014pres.xlsx")
+ukr_pres14 = 
 ##### Dataframe for Batch ------------------------------------------------------
 ## As requested this will update as I go
 geol_16 = add_column(geol_16, registered_voters = NA, .after = 'election_type')

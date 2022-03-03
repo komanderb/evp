@@ -1,7 +1,8 @@
 ### This file is solely for renaming countries
 # Some beginnings first
 ###
-custom_dict <- data.frame(portugese = countrycode::codelist$cldr.name.pt,
+install.packages('IRkernel')
+bcustom_dict <- data.frame(portugese = countrycode::codelist$cldr.name.pt,
                           english = countrycode::codelist$cldr.name.en,
                           romanian = countrycode::codelist$cldr.name.ro,
                           french = countrycode::codelist$cldr.name.fr,
@@ -88,12 +89,13 @@ RoPres_09$weird2[RoPres_09$country == 'Teatrul de operatiuni KOSOVO'] <- 'Kosovo
 RoPres_09$country <- RoPres_09$weird2
 RoPres_09 <- RoPres_09[-c(32,33)]
 
+rom_dic$CoR_original = iconv(rom_dic$CoR_original, from = "UTF-8", to = 'ASCII//TRANSLIT')
+RoPres_14$country = iconv(RoPres_14$country, from = "UTF-8", to = 'ASCII//TRANSLIT')
 RoPres_14$weird <-  countrycode(toupper(RoPres_14$country),  "CoR_original", "CoR_english", custom_dict = rom_dic)
 ## problematic but no way around it: 
 RoPres_14$weird[toupper(RoPres_14$country) == 'BOSNIA HERTEGOVINA'] <- "Bosnia"
 RoPres_14$weird[toupper(RoPres_14$country) == 'KUWEIT'] <- "Kuwait"
 RoPres_14$weird[toupper(RoPres_14$country) == 'MALAEZIA'] <- "Malaysia"
-##
 RoPres_14$weird[toupper(RoPres_14$country) == 'REPUBLICA COREEA (COREEA DE SUD)'] <- "South Korea"
 RoPres_14$weird[toupper(RoPres_14$country) == 'REPUBLICA MOLDOVA'] <- "Moldova"
 RoPres_14$weird[toupper(RoPres_14$country) == 'REPUBLICA CHINEZA'] <- "China"
@@ -124,11 +126,10 @@ RoPres_14 <- RoPres_14[-c(36,37)]
 RoLeg_12$weird <- countrycode(RoLeg_12$country,  "CoR_original", "CoR_english", custom_dict = rom_dic)
 RoLeg_12$weird[RoLeg_12$country == 'S.U.A.'] <- "US"
 RoLeg_12$weird[RoLeg_12$country == 'AFGANISTAN'] <- '"Afghanistan"'
-RoLeg_12$weird[RoLeg_12$country == 'REP. MOLDOVA'] <- "Moldova"
+RoLeg_12$weird[RoLeg_12$country == 'REP.MOLDOVA'] <- "Moldova"
 RoLeg_12$weird2 <- countryname(RoLeg_12$weird)
 RoLeg_12$country <- RoLeg_12$weird2
 RoLeg_12 <- RoLeg_12[-c(59,60)]
-
 
 #### some stuff for brazil ----------------------------------------------------
 ## try to ignore it, just left it in 
@@ -177,6 +178,3 @@ x_5 <- as.data.frame(x_5)
 names(x_5) <- c('city_origin', 'iso2a')
 x_5 <- x_5[-c(17),]
 country_names <- rbind(country_names, x_5)
-
-(cz_17, cz_13, Hon_01, Hon_05, Hon_09, Hon_13, Hon_17, fr_02, bra_02, col_02, 
-  col_14, ita_13, mozl_04, mozp_04, mozl_09, mozp_09, mozl_14, mozp_14)
