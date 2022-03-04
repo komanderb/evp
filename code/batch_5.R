@@ -1140,6 +1140,117 @@ ven_13 = ven_13[-12]
 ven_13 = main_function(ven_13, "HENRIQUE CAPRILES RADONSKI", "JULIO MORA", 6, "NICOLAS MADURO")
 ven_13 = extra_cols(ven_13, "Venezuela", "2013-04-14", "Presidential")
 
+#### Mauretania ----------------------------------------------------------------
+
+mau_pres_19 = read_xlsx("Mauretania/ResultatElection2019.xlsx")
+mau_pres_19 =  mau_pres_19 %>% filter(libWilaya == "Etranger")
+mau_pres_19 = mau_pres_19[-c(1:7, 19)]
+mau_pres_19 = mau_pres_19 %>% pivot_wider(names_from = Candidat, values_from = nbVoix)
+mau_pres_19 = mau_pres_19[-c(2:4)]
+# Vote neutre? -> blanc votes
+names(mau_pres_19)[1:6] = c("country", "registered_voters", "total_votes", 
+                            "null_votes", "blanco_votes", "valid_votes")
+
+mau_names = names(mau_pres_19)
+mau_pres_19 = aggregate(c(mau_pres_19[2:12]), by = mau_pres_19[1], sum)
+names(mau_pres_19) = mau_names
+mau_pres_19$weird = countryname(mau_pres_19$country)
+french = unlist(str_split("Arabie Saoudite, Emirats Arabes Unis", ", "))
+english = c("Saudi Arabia", "United Arab Emirates")
+for (i in seq_along(french)){
+  mau_pres_19$weird[mau_pres_19$country == french[i]] = english[i]
+}
+mau_pres_19$country = countryname(mau_pres_19$weird)
+mau_pres_19 = mau_pres_19[-13]
+str(mau_pres_19)
+mau_pres_19 = main_function(mau_pres_19, "Mohamed Cheïkh Mohamed Ahmed ElGHAZOUANI (Ghazouani)", 
+                            "KANE Hamidou Baba (Kane)", 7, "Mohamed Cheïkh Mohamed Ahmed ElGHAZOUANI (Ghazouani)")
+mau_pres_19 = extra_cols(mau_pres_19, "Mauritania", "2019-06-22", "Presidential")
+
+# ah I forgot COO
+mau_pres_19_coo = read_xlsx("Mauretania/ResultatElection2019.xlsx")
+mau_pres_19_coo =  mau_pres_19_coo %>% filter(!(libWilaya == "Etranger"))
+mau_pres_19_coo = mau_pres_19_coo[-c(1:7, 19)]
+mau_pres_19_coo = mau_pres_19_coo %>% pivot_wider(names_from = Candidat, values_from = nbVoix)
+mau_pres_19_coo = mau_pres_19_coo[-c(2:4)]
+
+# Vote neutre? -> blanc votes
+names(mau_pres_19_coo)[1:6] = c("country", "registered_voters", "total_votes", 
+                            "null_votes", "blanco_votes", "valid_votes")
+
+mau_pres_19_coo = mau_pres_19_coo[-1]
+mau_pres_19_coo = as.data.frame(colSums(mau_pres_19_coo))
+mau_pres_19_coo = rownames_to_column(mau_pres_19_coo)
+mau_pres_19_coo = mau_pres_19_coo %>% pivot_wider(names_from = rowname, values_from = `colSums(mau_pres_19_coo)`)
+mau_pres_19_coo = add_column(mau_pres_19_coo, country = "Mauritania", .before = 1)
+mau_pres_19_coo = main_function(mau_pres_19_coo, "Mohamed Cheïkh Mohamed Ahmed ElGHAZOUANI (Ghazouani)", 
+                            "KANE Hamidou Baba (Kane)", 7, "Mohamed Cheïkh Mohamed Ahmed ElGHAZOUANI (Ghazouani)")
+mau_pres_19_coo = extra_cols(mau_pres_19_coo, "Mauritania", "2019-06-22", "Presidential")
+
+
+#### Poland --------------------------------------------------------------------
+pol_05_leg = read_xls("Poland/Poland Leg. 2005. All Results.xls", col_types = "text")
+pol_05_leg = pol_05_leg %>% filter(Powiat == "Zagranica")
+
+pol_05_leg$`Adres obwodu` = iconv(gsub("\\,.*", "", pol_05_leg$`Adres obwodu`),from = 'UTF-8', to = 'ASCII//TRANSLIT') 
+pol_05_leg = pol_05_leg[-c(1:5)]
+pol_05_leg[2:28] = lapply(pol_05_leg[2:28], function(y) as.numeric(y))
+pol_05_leg = pol_05_leg[-c(25:28)]
+pol_names = names(pol_05_leg)
+
+pol_05_leg$weird = countrycode(tolower(pol_05_leg$`Adres obwodu`), "polish", "english", custom_dict = custom_dict)
+polish = unlist(str_split("azerbajdzan, izrael tel aviv, korea, macedonia, rpa, serbia i czarnogora, stany zjednoczone chicago ii, tajpej, wielka brytania i irlandia, zimbabwe harare", ", "))
+
+for (i in polish)
+  print(i)
+
+english = c(
+  "azerbaijan",
+  "Israel",
+  "korea",
+  "macedonia",
+  "South Africa",
+  "Serbia and Montenegro",
+  "US",
+  "taipei",
+  "UK",
+  "zimbabwe harare"
+)
+
+for (i in seq_along(polish)){
+  pol_05_leg$weird[tolower(pol_05_leg$`Adres obwodu`) == polish[i]] = english[i]
+}
+pol_05_leg$`Adres obwodu` =  countryname(pol_05_leg$weird)
+pol_05_leg = pol_05_leg[-25]
+pol_05_leg = aggregate(c(pol_05_leg[2:24]), by = pol_05_leg[1], sum)
+
+names(pol_05_leg) = iconv(pol_names, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+pol_05_leg = pol_05_leg[-3]
+names(pol_05_leg)[1:5] = c("country", "registered_voters", "total_votes", "invalid_votes", "valid_votes")
+pol_05_leg = main_function(pol_05_leg, "1 - Ruch Patriotyczny", "18 - Narodowe Odrodzenie Polski", 6, "6 - Prawo i Sprawiedliwosc")
+pol_05_leg = extra_cols(pol_05_leg, "Poland", "2005-09-25", "Legislative")
+
+## also forgot COO again
+pol_leg05_coo = read_xls("Poland/Poland Leg. 2005. All Results.xls", col_types = "text")
+pol_leg05_coo = pol_leg05_coo %>% filter(!(Powiat == "Zagranica"))
+pol_leg05_coo = pol_leg05_coo[-c(1:6)]
+pol_leg05_coo[1:27] = lapply(pol_leg05_coo[1:27], function(y) as.numeric(y))
+pol_leg05_coo = pol_leg05_coo[-2]
+names(pol_leg05_coo)[1:4] = c("registered_voters", "total_votes", 
+                              "invalid_votes", "valid_votes")
+pol_leg05_coo[is.na(pol_leg05_coo)] = 0
+names(pol_leg05_coo) = iconv(names(pol_leg05_coo), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+#pol_names = names(pol_leg05_coo)
+pol_leg05_coo = as.data.frame(colSums(pol_leg05_coo))
+
+
+pol_leg05_coo = rownames_to_column(pol_leg05_coo)
+pol_leg05_coo = pol_leg05_coo %>% pivot_wider(names_from = rowname, values_from = `colSums(pol_leg05_coo)`)
+pol_leg05_coo = add_column(pol_leg05_coo, country = "Poland", .before = 1)
+# this will have more parties than abroad //
+pol_leg05_coo = main_function(pol_leg05_coo, "1 - Ruch Patriotyczny", "19 - Mniejszosc Niemiecka Slaska", 6, "6 - Prawo i Sprawiedliwosc")
+pol_leg05_coo = extra_cols(pol_leg05_coo, "Poland", "2005-09-25", "Legislative")
+
 ##### Dataframe for Batch ------------------------------------------------------
 
 ukr_leg06 = add_column(ukr_leg06, blanco_votes = NA, .after = 'null_votes')
@@ -1152,7 +1263,8 @@ batch_5 = bind_rows(ukr_leg06, geol_04, geol_08, geol_12, geol_16, geop_08, geop
                     ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17,
                     ukr_leg12, ukr_leg14, ukr_leg19, ukr_leg07, 
                     ukr_leg02, ukr_pres10, ukr_pres14, ukr_pres19, tim_leg17, 
-                    tim_leg18, saot_pres06, saot_pres11, sen_pres00, ven_13
+                    tim_leg18, saot_pres06, saot_pres11, sen_pres00, ven_13,
+                    pol_05_leg, mau_pres_19
                     )
 
 
@@ -1162,6 +1274,7 @@ write.csv(batch_5, 'batch_5.csv', row.names = F)
 geol_16_coo = add_column(geol_16_coo, registered_voters = NA, .before = 'valid_votes')
 geol_16_coo = add_column(geol_16_coo, total_votes = NA, .before = 'valid_votes')
 geol_16_coo = add_column(geol_16_coo, invalid_votes = NA, .after = 'valid_votes')
-df_coo = bind_rows(geol_16_coo,geol_12_coo, geop_13_coo, geop_18_coo, tim_leg17_coo, tim_leg18_coo, saot_pres06_coo, saot_pres11_coo)
+df_coo = bind_rows(geol_16_coo,geol_12_coo, geop_13_coo, geop_18_coo, tim_leg17_coo, 
+                   tim_leg18_coo, saot_pres06_coo, saot_pres11_coo, pol_leg05_coo, mau_pres_19_coo)
 
 write.csv(df_coo, 'batch_5_coo.csv', row.names = F)
