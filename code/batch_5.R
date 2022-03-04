@@ -21,7 +21,7 @@ library(splitstackshape)
 # Setting working directory 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
 
-#### Georiga ------------------------------------------------------------------
+#### Georgia ------------------------------------------------------------------
 # First excel files
 file = "Georgia/Copy of Georgia. Results from overseas Parl2008, Parl2004, Pres2008,.xlsx"
 # Legislative 04
@@ -41,8 +41,23 @@ geol_04 = extra_cols(geol_04, 'Georgia', '2004-03-24', 'Legislative')
 
 # Legislative 08 
 geol_08 = read_xlsx(file, sheet = 3)
-## duplicated party ?? 
+names(geol_08)[12:13] = c("United Opposition Party (National Council, Right)", "National Party of Radical Democrats of Georgia")
+geol_08 = renamer(geol_08, 1)
+geol_08$country = gsub(",.*", "", geol_08$country)
+geol_08$country = gsub("\\..*", "", geol_08$country)
+geol_08$country = countryname(geol_08$country)
+# I will drop these as they don't make any sense
+geol_08 = geol_08[-c(2,4)]
+names(geol_08)[2:3] = c("total_votes", "null_votes")
+geo_names = names(geol_08)
+geo_names = gsub("\"", "", geo_names)
+geol_08 = aggregate(c(geol_08[2:15]), by = geol_08[1], sum)
+names(geol_08) = geo_names
+geol_08 = add_column(geol_08, valid_votes = rowSums(geol_08[4:15]), .after = "total_votes")
+geol_08 = main_function(geol_08, "Citizens' Political Union Georgian Politics", "Georgian Political Party Our Country", 5, "United National Movement - for Victorious Georgia")
+geol_08 = extra_cols(geol_08, "Georgia", "2008-05-21", "Legislative")
 
+## the whole valid/null/total votes does not make any sense
 
 # Legislative 2012
 
@@ -248,8 +263,244 @@ geop_18_coo = extra_cols(geop_18_coo, "Georgia", "2018-10-28", "Presidential")
 mac_1 = read.csv("macedonia_2016_1.csv", encoding = "UTF-8")
 mac_2 = read.csv("macedonia_2016_2.csv", encoding = "UTF-8")
 
-unique(mac_1$pol_stat)
+mac_polstat = unique(mac_1$pol_stat)
+mac_polstat_2 = read.delim("macedonia_pol_stat.txt", sep = ",", header = F)
+mac_polstat = mac_polstat[-1]
+mac_polstat_2$original = mac_polstat
+
+mac_party = unique(mac_1$Party)f
+for (i in mac_party){
+  print(i)
+}
+
+mac_party_en = c(
+  "VMRO-DPMNE",
+  "DUI",
+  "SDSM",
+  "VMRO for Macedonia"
+)
+
+for (i in seq_along(mac_party)){
+  mac_1$Party[mac_1$Party == mac_party[i]] = mac_party_en[i]
+}
+
+mac_1 = mac_1[-c(1:4),]
+mac_1$pol_stat = countrycode(mac_1$pol_stat, "original", "V2", custom_dict = mac_polstat_2)
+mac_1 = mac_1[-c(1,3,4,6,8)]
+mac_1$pol_stat = trimws(mac_1$pol_stat)
+mac_1 = mac_1 %>% pivot_wider(names_from = Party, values_from = Votes, values_fn = sum)
+
+mac_2 = mac_2[-c(1:7),-1]
+mac_2$pol_stat = countrycode(mac_2$pol_stat, "original", "V2", custom_dict = mac_polstat_2)
+mac_2$pol_stat = trimws(mac_2$pol_stat)
+mac_2 = mac_2 %>% filter(!(X0 %in% c("Number/Percent of polling stations that have sent data (without ZRD)","Percent out of voters who voted in polling stations that have sent data")))
+mac_2[3] = lapply(mac_2[3], function(y) as.numeric(y))
+mac_2 =  mac_2 %>% pivot_wider(names_from = X0, values_from = X1, values_fn = sum)
+mac_2 = mac_2[-3]
+names(mac_2) = c("country", "registered_voters", "total_votes", "valid_votes", "invalid_votes")
+mac_1 = renamer(mac_1, 1)
+mac_16 = left_join(mac_2, mac_1)
+mac_16 = main_function(mac_16, "VMRO-DPMNE", "VMRO for Macedonia", 6,  "VMRO-DPMNE")
+mac_16 = extra_cols(mac_16, "North Macedonia", "2016-12-11", "Legislative")
+
 #### Moldova -------------------------------------------------------------------
+## Legislative July 2009
+mol_leg09 = read.csv("moldova_leg_09_july.csv", encoding = "UTF-8")
+mol_leg09 = mol_leg09[-c(1:29),]
+mol_leg09$X1 = iconv(mol_leg09$X1, from = "UTF-8", to = 'ASCII//TRANSLIT')
+mol_names = mol_leg09$X1
+expressions = c(".* in ", ".* la ", ".* al ", ".* a ", ".* la ", "\n")
+for (i in seq_along(expressions)){
+  mol_names = gsub(expressions[i], "", mol_names)
+}
+
+for (i in mol_names)
+  print(i)
+
+english = c(
+  "Republic of Austria",
+  "Republic of Azerbaijan",
+  "Republic of Belarus",
+  "Kingdom of Belgium",
+  "Republic of Bulgaria",
+  "Czech Republic",
+  "People's Republic of China",
+  "Hellenic Republic",
+  "Swiss Confederation",
+  "Republic of Estonia",
+  "French Republic",
+  "French Republic",
+  "Federal Republic of Germany",
+  "Federal Republic of Germany",
+  "State of Israel",
+  "Italy",
+  "Italy",
+  "Republic of Latvia",
+  "Republic of Lithuania",
+  "Great Britain and Northern Ireland",
+  "Republic of Poland",
+  "Portugal",
+  "Romania",
+  "Romania",
+  "Russian Federation",
+  "United States of America",
+  "United States of America",
+  "Kingdom of Sweden",
+  "Republic of Turkey",
+  "Republic of Turkey",
+  "Ukraine",
+  "Ukraine",
+  "Republic of Hungary"
+)
+
+
+english = countryname(english)
+mol_leg09$english = english
+mol_dic = mol_leg09[c(3,22)]
+mol_leg09$X1 = mol_leg09$english
+mol_leg09 = mol_leg09[-22]
+mol_leg09 = mol_leg09[-1]
+names(mol_leg09) = c('section_nr_1', 'country', 'Number of voters included in the electoral lists', 
+                     'Number of voters included in the lists more', 'The number of voters received ballots', 
+                     'The number of voters who participated in the voting', 'Difference of ballots received and voters who participated in the voting', 
+                     'invalid_ballots', 'section_nr', 'valid_votes', 'Number of newslettersvote received', 'Number of ballots unused and canceled', 'Partidul Comunistilor din Republica Moldova', 
+                     'Partidul Popular Crestin Democrat', 'Alianta MOLDOVA NOASTRA', 'Partidul Liberal', 'Partidul Liberal Democrat din Moldova', 'Partidul Democrat din Moldova', 'Partidul Social Democrat', 
+                     'Partidul Ecologist Alianta Verde din Moldova')
+
+# this might be a long shot
+mol_leg09 = add_column(mol_leg09, registered_voters = rowSums(mol_leg09[3:4]), .after = "country")
+mol_leg09 = mol_leg09[-c(1,4:6, 8, 10, 12,13)]
+names(mol_leg09)[3:4] = c("total_votes", "invalid_votes")
+mol_names = names(mol_leg09)
+mol_leg09 = aggregate(c(mol_leg09[2:13]), by = mol_leg09[1], sum)
+names(mol_leg09) = mol_names
+mol_leg09 = main_function(mol_leg09, "Partidul Comunistilor din Republica Moldova", "Partidul Ecologist Alianta Verde din Moldova", 6, "Partidul Comunistilor din Republica Moldova")
+mol_leg09 = extra_cols(mol_leg09, "Moldova", "2009-07-29", "Legislative")
+
+
+## Legislative April 2009
+mol_leg09april = read_xlsx("Moldova/moldova2009leg1.xlsx")
+mol_leg09april = add_column(mol_leg09april, country = english, .after = "Sectia de votare") 
+# passt
+#names are very messy
+mol_leg09april = mol_leg09april[-c(1,2,14)]
+# and get rid of those 
+mol_leg09april = mol_leg09april[-c(4,8)]
+mol_leg09april[2:23] = lapply(mol_leg09april[2:23], function(y) as.numeric(y))
+mol_leg09april = add_column(mol_leg09april, registered_voters = rowSums(mol_leg09april[2:3]), .after = "country")
+mol_leg09april = mol_leg09april[-c(3,4)]
+names(mol_leg09april)[3:5] = c("total_votes", "invalid_votes", "valid_votes")
+mol_names = names(mol_leg09april)
+mol_leg09april = aggregate(c(mol_leg09april[2:22]), by = mol_leg09april[1], sum)
+names(mol_leg09april) = mol_names
+mol_leg09april = main_function(mol_leg09april, "Partidul Social Democrat", "Lomakin Alexandr, candidat independent", 6, "Partidul Comunictilor din Republica Moldova")
+mol_leg09april = extra_cols(mol_leg09april, "Moldova", "2009-04-05", "Legislative")
+
+
+## Legislative 2010
+mol_leg10 = read.csv("Moldova/moldova2010leg.xlsx - Sheet1.csv", encoding = "UTF-8", header = F)
+mol_leg10 = row_to_names(mol_leg10, 1)
+mol_leg10 = mol_leg10[-1,]
+mol_leg10$Localitatea = iconv(mol_leg10$Localitatea, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+names(mol_leg10) = iconv(names(mol_leg10), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+expressions = c(".* in ", ".* la ", ".* al ", ".* a ", ".* la ", "\n", " or.*" )
+for (i in seq_along(expressions)){
+  mol_leg10$Localitatea = gsub(expressions[i], "", mol_leg10$Localitatea)
+} 
+for (i in mol_leg10$Localitatea)
+  print(i)
+
+english = c(
+  "Republic of Austria",
+  "Republic of Azerbaijan",
+  "Republic of Belarus",
+  "Kingdom of Belgium",
+  "Republic of Bulgaria",
+  "Czech Republic",
+  "People's Republic of China",
+  "Cyprus",
+  "Hellenic Republic",
+  "Hellenic Republic",
+  "Swiss Confederation",
+  "Republic of Estonia",
+  "French Republic",
+  "French Republic",
+  "French Republic",
+  "Federal Republic of Germany",
+  "Federal Republic of Germany",
+  "State of Israel",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Italy",
+  "Ireland",
+  "Republic of Latvia",
+  "Republic of Lithuania",
+  "Great Britain and Northern Ireland",
+  "Republic of Poland",
+   "Portugal",
+  "Republic of Puerto Rico",
+  "Portugal",
+  "Portugal",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Romania",
+  "Russian Federation",
+  "Russian Federation",
+  "Russian Federation",
+  "Russian Federation",
+  "Kingdom of Spain",
+  "Kingdom of Spain",
+  "Kingdom of Spain",
+  "United States of America",
+  "USA",
+  "USA",
+  "USA",
+  "USA",
+  "USA",
+  "USA",
+  "USA",
+  "Canada",
+  "Canada",
+  "Kingdom of Sweden",
+  "Republic of Turkey",
+  "Turkey",
+  "Ukraine",
+  "Ukraine",
+  "Ukraine",
+  "Republic of Hungary"
+)
+english = countryname(english)
+mol_leg10 = add_column(mol_leg10, country = english, .after = "Localitatea")
+mol_leg10[4:51] = lapply(mol_leg10[4:51], function(y) as.numeric(y))
+mol_leg10 = add_column(mol_leg10, registered_voters = rowSums(mol_leg10[4:5]), .after = "country")
+mol_leg10 = mol_leg10[-c(1,2,5:7,9, 50:52)]
+names(mol_leg10)[3:4] = c("total_votes", "invalid_votes")
+mol_leg10 = add_column(mol_leg10, valid_votes = rowSums(mol_leg10[5:43]), .after = "total_votes")
+
+names(mol_leg10) = gsub("\"", "", names(mol_leg10))
+mol_names = names(mol_leg10)
+mol_leg10 = aggregate(c(mol_leg10[2:44]), by = mol_leg10[1], sum)
+names(mol_leg10) = mol_names
+mol_leg10 = main_function(mol_leg10, "Partidul National Liberal", "Sergiu Banari, candidat independent", 6, "Partidul Comuni?tilor din Republica Moldova")
+mol_leg10 = extra_cols(mol_leg10, "Moldova", "2010-11-28", "Legislative")
 
 
 #### Turkey --------------------------------------------------------------------
@@ -598,6 +849,98 @@ ukr_leg19 = ukr_leg19[-25]
 ukr_leg19 = main_function(ukr_leg19, "EUROPEAN SOLIDARITY POLITICAL PARTY", "Political Party Association SELF-HELP", 3, "POLITICAL PARTYSERVANT OF THE PEOPLE")
 ukr_leg19 = extra_cols(ukr_leg19, "Ukraine", "2019-07-21", "Legislative")
 
+#Legislative 2007
+ukr_leg07 = read_xlsx("Ukraine/ukraine_leg_2007.xlsx")
+ukr_leg07_pol = read_xlsx("Ukraine/ukraine_leg_2007_pol_stat.xlsx")
+ukr_leg07_pol$polling_station = gsub("\\..*", "", ukr_leg07_pol$polling_station)
+ukr_leg07_pol$polling_station[ukr_leg07_pol$Country == "Republic of Belarus"] = "8, 9"
+ukr_leg07_pol$polling_station[ukr_leg07_pol$Country == "Republic of Bulgaria"] = "10, 11"
+ukr_leg07_pol = cSplit(ukr_leg07_pol, "polling_station", sep=",", "long")
+ukr_leg07$country = countrycode(ukr_leg07$country, "polling_station", "Country", custom_dict = ukr_leg07_pol)
+names(ukr_leg07) = gsub("\"", "", names(ukr_leg07))
+ukr_names = names(ukr_leg07)
+ukr_leg07 = aggregate(c(ukr_leg07[2:24]), by = ukr_leg07[1], sum)
+
+names(ukr_leg07) = ukr_names
+ukr_leg07 = add_column(ukr_leg07, valid_votes = rowSums(ukr_leg07[5:24]), .after = "total_votes")
+ukr_leg07 = main_function(ukr_leg07, "Communist Party of Ukraine (updated)", "Electoral bloc of political parties KUCHMA (Constitution - Ukraine - Honor - Peace - Anti-fascism)", 6, "Party of Regions")
+ukr_leg07 = extra_cols(ukr_leg07, "Ukraine", "2007-09-30", "Legislative")
+ukr_leg07$weird = countryname(ukr_leg07$country)
+#wrong names again
+for (i in seq_along(wrong_names)){
+  ukr_leg07$weird[ukr_leg07$country == wrong_names[i]] = right_names[i]
+}
+ukr_leg07$country = countryname(ukr_leg07$weird)
+ukr_leg07 = ukr_leg07[-51]
+
+## Legislative 2006
+ukr_leg06 = read_xlsx("Ukraine/ukraine_leg_2006.xlsx")
+ukr_leg06_pol = read_xlsx("Ukraine/ukraine_leg_06_pol.xlsx")
+ukr_leg06_pol$`Precinct numbers` = gsub("\\..*", "", ukr_leg06_pol$`Precinct numbers`)
+ukr_leg06_pol$`Precinct numbers`[ukr_leg06_pol$Country == "Republic of Belarus"] = "8, 9"
+ukr_leg06_pol$`Precinct numbers`[ukr_leg06_pol$Country == "Republic of Bulgaria"] = "10, 11"
+ukr_leg06_pol = cSplit(ukr_leg06_pol, "Precinct numbers", sep=",", "long")
+
+ukr_leg06$country = countrycode(ukr_leg06$country, "Precinct numbers", "Country", custom_dict = ukr_leg06_pol)
+names(ukr_leg06) = gsub("\"", "", names(ukr_leg06))
+ukr_names = names(ukr_leg06)
+ukr_leg06 = aggregate(c(ukr_leg06[2:49]), by = ukr_leg06[1], sum)
+names(ukr_leg06) = ukr_names
+ukr_leg06 = add_column(ukr_leg06, valid_votes = rowSums(ukr_leg06[5:49]), .after = "total_votes")
+ukr_leg06 = main_function(ukr_leg06, "All-Ukrainian Party of People's Trust", "Labor Ukraine Political Party", 6, "Party of Regions")
+ukr_leg06 = extra_cols(ukr_leg06, "Ukraine", "2006-03-26", "Legislative")
+ukr_leg06$weird = countryname(ukr_leg06$country)
+for (i in seq_along(wrong_names)){
+  ukr_leg06$weird[ukr_leg06$country == wrong_names[i]] = right_names[i]
+}
+ukr_leg06$country = countryname(ukr_leg06$weird)
+ukr_leg06 = ukr_leg06[-101]
+
+# leg 2002
+
+ukr_leg02 = read.csv("ukraine_leg_2002.csv", encoding = "UTF-8")
+ukr_leg02 = row_to_names(ukr_leg02, 1)
+
+a = 1
+vector = c(1)
+while (a < 3060){
+  a = a +34
+  vector = append(vector, a)
+  
+}
+vector = vector[-91]
+ukr_polstat = ukr_leg02$`Ranking by site`[vector]
+ukr_polstat = gsub(" Polling Station.*", "", ukr_polstat)
+#ukr_polstat = gsub(" Precint.*", "", ukr_polstat)
+ukr_polstat = gsub(" Polling station.*", "", ukr_polstat)
+ukr_polstat = gsub(" Precinct.*", "", ukr_polstat)
+ukr_polstat = gsub(" Constituency.*", "", ukr_polstat)
+list_names = c()
+for (i in ukr_polstat){
+  list_names = append(list_names, rep(i, times = 34))
+} 
+
+ukr_leg02 = add_column(ukr_leg02, country = list_names, .before = "0")
+ukr_leg02 = ukr_leg02[-vector,-c(2,3,6)]
+names(ukr_leg02)[2:3] = c("party", "votes")
+ukr_leg02$votes = gsub("th", "", ukr_leg02$votes)
+ukr_leg02[3] = lapply(ukr_leg02[3], function(y) as.numeric(gsub(" ", "", y)))
+ukr_leg02$weird = countryname(ukr_leg02$country)
+names_02 = unlist(str_split("Italian Republic, Lebanese Republic, Mexican United States, Portuguese Republic", ", "))
+names_02_right = c("Italy", "Lebanon", "Mexico","Portugal")
+for (i in seq_along(names_02)){
+  ukr_leg02$weird[ukr_leg02$country == names_02[i]] = names_02_right[i]
+}
+
+ukr_leg02$country = countryname(ukr_leg02$weird)
+ukr_leg02 = ukr_leg02[-4]
+ukr_leg02 = ukr_leg02 %>% pivot_wider(names_from = party, values_from = votes,  values_fn = sum)
+names(ukr_leg02) = gsub("\"", "", names(ukr_leg02)) 
+ukr_leg02 = add_column(ukr_leg02, valid_votes = rowSums(ukr_leg02[2:34]), .after = "country")
+names(ukr_leg02) = trimws(names(ukr_leg02))
+ukr_leg02 = main_function(ukr_leg02, "Electoral bloc of political parties Victor Yushchenko's bloc Our Ukraine", "Electoral bloc of political parties Russian bloc", 3, "Electoral bloc of political parties Victor Yushchenko's bloc Our Ukraine")
+ukr_leg02 = extra_cols(ukr_leg02, "Ukraine", "2002-03-31", "Legislative")
+
 
 ### Presidential:
 
@@ -626,40 +969,199 @@ ukr_pres10 = extra_cols(ukr_pres10, "Ukraine", "2010-01-17", "Presidential")
 
 #2014
 ukr_pres14 = read_xlsx("Ukraine/ukraine2014pres.xlsx")
-ukr_pres14 = 
+ukr_pres14_polst = read.csv("ukraine_pres_2014_polstat.csv", encoding = 'UTF-8')
+ukr_pres14_polst = row_to_names(ukr_pres14_polst, 1)
+ukr_pres14_polst = cSplit(ukr_pres14_polst, "Precinct  numbers", sep=",", "long")
+ukr_pres14_polst = ukr_pres14_polst[,-c(1,3)]
+ukr_pres14$`N VD` = countrycode(ukr_pres14$`N VD`, "Precinct  numbers", "Foreign state", custom_dict = ukr_pres14_polst)
+ukr_pres14 = ukr_pres14[-c(2,4:9)]
+names(ukr_pres14)[1:4] = c("country", "registered_voters", "total_votes", "invalid_votes")
+ukr_pres14[2:25] = lapply(ukr_pres14[2:25], function(y) as.numeric(y))
+ukr_pres14 = aggregate(c(ukr_pres14[2:25]), by = ukr_pres14[1], sum)
+ukr_pres14 = add_column(ukr_pres14, valid_votes = rowSums(ukr_pres14[5:25]), .after = "total_votes")
+ukr_pres14 = main_function(ukr_pres14, "Hermit", "X.pom", 6, "Poroshenko")#
+ukr_pres14 = extra_cols(ukr_pres14, "Ukraine", "2014-05-25", "Presidential")
+ukr_pres14$weird = countryname(ukr_pres14$country)
+# wrong names from above still the same
+for (i in seq_along(wrong_names)){
+  ukr_pres14$weird[ukr_pres14$country == wrong_names[i]] = right_names[i]
+}
+
+ukr_pres14$country = countryname(ukr_pres14$weird)
+ukr_pres14 = ukr_pres14[-53]
+## 2019
+
+ukr_pres19 = read_xlsx("Ukraine/ukraine_pres_2019.xlsx")
+ukr_pres19_polst = read.csv("ukraine_pres_2019_polstat.csv", encoding = 'UTF-8')
+ukr_pres19_polst = ukr_pres19_polst[-c(1,3)]
+ukr_pres19_polst = cSplit(ukr_pres19_polst, "Precinct.numbers", sep=",", "long")
+ukr_pres19$country = countrycode(ukr_pres19$country, "Precinct.numbers", "Foreign.state", custom_dict = ukr_pres19_polst)
+names(ukr_pres19)[17] = "Vasyl Zhuravlyov"
+str(ukr_pres19)
+ukr_names = names(ukr_pres19)
+ukr_names = gsub("\n", " ", ukr_names)
+ukr_pres19 = aggregate(c(ukr_pres19[2:43]), by = ukr_pres19[1], sum)
+names(ukr_pres19) = ukr_names
+ukr_pres19 = add_column(ukr_pres19, valid_votes = rowSums(ukr_pres19[5:43]), .after = "total_votes")
+ukr_pres19 = main_function(ukr_pres19, "Balashov Gennady", "Shevchenko Alexander", 6, "Zelensky Vladimir")
+ukr_pres19 = extra_cols(ukr_pres19, "Ukraine", "2019-03-31", "Presidential")
+ukr_pres19$weird = countryname(ukr_pres19$country)
+for (i in seq_along(wrong_names)){
+  ukr_pres19$weird[ukr_pres19$country == wrong_names[i]] = right_names[i]
+}
+ukr_pres19$country = countryname(ukr_pres19$weird)
+ukr_pres19 = ukr_pres19[-89]
+
+
+#### Timor-Leste---------------------------------------------------------------
+# Legislative 2017
+tim_leg17 = read_xlsx("timor_leste/timorleste2017leg_mod.xlsx")
+tim_leg17[2:18] = lapply(tim_leg17[2:18], function(y) as.numeric(gsub("\\.", "", y)))
+tim_leg17 = add_column(tim_leg17, "Timor-Leste" = rowSums(tim_leg17[2:14]), .after = "party")
+tim_leg17 = tim_leg17[-c(3:15)]
+tim_names = tim_leg17$party
+tim_leg17 = data.frame(t(tim_leg17[,-1]))
+names(tim_leg17) = tim_names
+tim_leg17 = rownames_to_column(tim_leg17)
+tim_leg17 = renamer(tim_leg17, 1)
+tim_leg17 = add_column(tim_leg17, valid_votes = rowSums(tim_leg17[2:22]), .after = "country")
+tim_leg17 = main_function(tim_leg17, "BUP", "FRETILIN", 3, "FRETILIN")
+tim_leg17 = extra_cols(tim_leg17, "Timor-Leste", "2017-07-22", "Legislative")
+tim_leg17_coo = tim_leg17[4,]
+tim_leg17 = tim_leg17[-4,]
+
+#Legislative 2018
+tim_leg18 = read_xlsx("timor_leste/timorleste2018leg_mod.xlsx")
+tim_leg18[2:11] = lapply(tim_leg18[2:11], function(y) as.numeric(gsub("\\.", "", y)))
+tim_leg18 = add_column(tim_leg18, "Timor-Leste" = rowSums(tim_leg18[2:7]), .after = "party")
+tim_leg18 = tim_leg18[-c(3:8)]
+tim_names = tim_leg18$party
+tim_leg18 = data.frame(t(tim_leg18[,-1]))
+names(tim_leg18) = tim_names
+tim_leg18 = rownames_to_column(tim_leg18)
+tim_leg18 = renamer(tim_leg18, 1)
+tim_leg18 = add_column(tim_leg18, valid_votes = rowSums(tim_leg18[2:9]), .after = "country")
+tim_leg18 = main_function(tim_leg18, "PEP", "AMP", 3, "AMP")
+tim_leg18 = extra_cols(tim_leg18, "Timor-Leste", "2018-05-12", "Legislative")
+tim_leg18_coo = tim_leg18[4,]
+tim_leg18 = tim_leg18[-4,]
+
+#### Saotome ------------------------------------------------------------------
+file = "saotome/saotome20062011pres.xlsx"
+# Pres 06
+saot_pres06 = read_xlsx(file, sheet = 1)
+saot_pres06[2:8] = lapply(saot_pres06[2:8], function(y) as.numeric(gsub("\\,", "", y)))
+saot_pres06$District[1:7] = "São Tomé & Príncipe"
+sao_names = names(saot_pres06)
+saot_pres06 = aggregate(c(saot_pres06[2:8]), by = saot_pres06[1], sum)
+names(saot_pres06) = sao_names
+names(saot_pres06)[c(1,5:8)] = c("country", "valid_votes", "invalid_votes", "total_votes", "registered_voters")
+saot_pres06 = main_function(saot_pres06, "Nilo Guimaraes", "Patrice Trovoada (ADI)", 6, "Fradique de Menezes (MDFM-PL) [MDFM-PCD]")
+saot_pres06 = extra_cols(saot_pres06, "São Tomé & Príncipe", "2006-07-30", "Presidential")
+saot_pres06_coo = saot_pres06[5,]
+saot_pres06 = saot_pres06[-5,]
+
+#Pres 11
+saot_pres11 = read_xlsx(file, sheet = 2)
+saot_pres11[2:12] = lapply(saot_pres11[2:12], function(y) as.numeric(gsub("\\,", "", y)))
+saot_pres11 = add_column(saot_pres11, "São Tomé & Príncipe" = rowSums(saot_pres11[2:8]), .after = "Candidate (Party)")
+saot_pres11 = saot_pres11[-c(3:9)]
+saot_names = saot_pres11$`Candidate (Party)`
+saot_pres11 = data.frame(t(saot_pres11[,-1]))
+names(saot_pres11) = saot_names
+saot_pres11 = rownames_to_column(saot_pres11)
+saot_pres11 = renamer(saot_pres11, 1)
+
+names(saot_pres11)[12:15] = c("valid_votes", "invalid_votes", "total_votes", "registered_voters")
+saot_pres11 = main_function(saot_pres11, "Manuel Pinto da Costa", "Manuel de Deus Lima", 6, "Manuel Pinto da Costa")
+saot_pres11 = extra_cols(saot_pres11, "São Tomé & Príncipe", "2011-07-17", "Presidential")
+saot_pres11_coo = saot_pres11[5,]
+saot_pres11 = saot_pres11[-5,]
+
+
+#### Senegal -------------------------------------------------------------------
+sen_pres00 = read_xlsx("Senegal/senegal2000pres.xlsx")
+sen_pres00 = sen_pres00[-c(13:52),]
+sen_pres00[2:16] = lapply(sen_pres00[2:16], function(y) as.numeric(gsub("\\,", "", y))) 
+sen_names = sen_pres00$`Candidate (Party) [Coalition]`
+sen_pres00 = data.frame(t(sen_pres00[,-1]))
+names(sen_pres00) = sen_names
+sen_pres00 = rownames_to_column(sen_pres00)
+sen_pres00 = renamer(sen_pres00, 1)
+names(sen_pres00)[10:13] = c("valid_votes", "invalid_votes", "total_votes", "registered_voters")
+sen_pres00$country = countryname(sen_pres00$country)
+sen_pres00 = main_function(sen_pres00, "Abdou Diouf (PS)", "Mademba Sock (RTA-S)", 6, "Abdou Diouf (PS)")
+sen_pres00 = extra_cols(sen_pres00, "Senegal", "2000-02-27", "Presidential")
+
+#### Venezuela -----------------------------------------------------------------
+
+# Pres 2013
+
+ven_13_1 = read.csv("ven_13_1.csv", encoding = "UTF-8")
+ven_13_2 = read.csv("ven_13_2.csv", encoding = "UTF-8")
+
+ven_13_1 = ven_13_1 %>% filter(!(is.na(Votos)))
+ven_13_1$Candidato = gsub("NICOLAS MADURO  Adjudicado", "NICOLAS MADURO",ven_13_1$Candidato)
+ven_13_1 = ven_13_1[-c(1,3,6)]
+ven_13_2 = ven_13_2 %>% filter(!(X0 %in% c("Ficha Técnica", "PARTICIPACIÓN RELATIVA", "ACTAS TOTALES", "ACTAS ESCRUTADAS")))
+ven_13_2 = ven_13_2[-c(1,4)]
+ven_13_2 = ven_13_2 %>% pivot_wider(names_from = X0, values_from = X2)
+ven_13_1 = ven_13_1 %>% pivot_wider(names_from = Candidato, values_from = Votos)
+ven_13 = left_join(ven_13_2, ven_13_1)
+ven_13[2:7] = lapply(ven_13[2:7], function(y) as.numeric(y))
+# assume they both describe registered_voters
+identical(ven_13$`ELECTORES ESPERADOS`, ven_13$`ELECTORES EN ACTAS TRANSMITIDAS`)
+# also electores escrutados??
+ven_13 = ven_13[-c(3,4)]
+names(ven_13)[2:5] = c("registered_voters", "total_votes", "valid_votes", "null_votes")
+ven_13$country = iconv(ven_13$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+ven_13$weird = countrycode(tolower(ven_13$country), "spanish2", "english", custom_dict = custom_dict)
+spanish = unlist(str_split("arabia saudita, checolovaquia, corea, emiratos arabes unid, gran bretana, grenada, guayana, palestina, qatar, san kitts y nevis, san vicente y las gr, suriname, usa", ", "))
+english = c( "saudi arabia",
+             "Czechoslovakia",
+             "Korea",
+             "united arab emirates",
+             "great britain",
+             "Grenada",
+            "Guiana",
+            "Palestine",
+            "Qatar",
+            "Saint Kitts and Nevis",
+            "St. Vincent & Grenadines",
+            "Suriname",
+            "US")
+
+for (i in seq_along(spanish)){
+  ven_13$weird[tolower(ven_13$country) == spanish[i]] = english[i]
+}
+
+ven_13$country = countryname(ven_13$weird)
+ven_13 = ven_13[-12]
+ven_13 = main_function(ven_13, "HENRIQUE CAPRILES RADONSKI", "JULIO MORA", 6, "NICOLAS MADURO")
+ven_13 = extra_cols(ven_13, "Venezuela", "2013-04-14", "Presidential")
+
 ##### Dataframe for Batch ------------------------------------------------------
-## As requested this will update as I go
-geol_16 = add_column(geol_16, registered_voters = NA, .after = 'election_type')
-geol_16 = add_column(geol_16, total_votes = NA, .after = 'registered_voters')
-geol_16 = add_column(geol_16, null_votes = NA, .after = 'total_votes')
-geol_16 = add_column(geol_16, blanco_votes = NA, .after = 'null_votes')
-geol_16 = add_column(geol_16, invalid_votes = NA, .after = 'blanco_votes')
+
+ukr_leg06 = add_column(ukr_leg06, blanco_votes = NA, .after = 'null_votes')
+ukr_leg06 = add_column(ukr_leg06, invalid_votes = NA, .after = 'blanco_votes')
 
 
-batch_5 = bind_rows(geol_16, geol_12, geol_04, geop_08, geop_13, geop_18,
+batch_5 = bind_rows(ukr_leg06, geol_04, geol_08, geol_12, geol_16, geop_08, geop_13, 
+                    geop_18, mac_16, mol_leg09, mol_leg09april, mol_leg10,
                     tur_leg15, tur_leg15_nov, tur_leg18, tur_pres14, tur_pres18,
-                    ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17)
+                    ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17,
+                    ukr_leg12, ukr_leg14, ukr_leg19, ukr_leg07, 
+                    ukr_leg02, ukr_pres10, ukr_pres14, ukr_pres19, tim_leg17, 
+                    tim_leg18, saot_pres06, saot_pres11, sen_pres00, ven_13
+                    )
 
 
 write.csv(batch_5, 'batch_5.csv', row.names = F)
 
-df_coo = bind_rows(geol_16_coo, geol_12_coo, geop_13_coo, geop_18_coo)
+## country of origing
+geol_16_coo = add_column(geol_16_coo, registered_voters = NA, .before = 'valid_votes')
+geol_16_coo = add_column(geol_16_coo, total_votes = NA, .before = 'valid_votes')
+geol_16_coo = add_column(geol_16_coo, invalid_votes = NA, .after = 'valid_votes')
+df_coo = bind_rows(geol_16_coo,geol_12_coo, geop_13_coo, geop_18_coo, tim_leg17_coo, tim_leg18_coo, saot_pres06_coo, saot_pres11_coo)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+write.csv(df_coo, 'batch_5_coo.csv', row.names = F)
