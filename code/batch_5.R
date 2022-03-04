@@ -1140,6 +1140,58 @@ ven_13 = ven_13[-12]
 ven_13 = main_function(ven_13, "HENRIQUE CAPRILES RADONSKI", "JULIO MORA", 6, "NICOLAS MADURO")
 ven_13 = extra_cols(ven_13, "Venezuela", "2013-04-14", "Presidential")
 
+## Venezuela 2006
+ven_1 = read.csv("ven_06_1.csv", encoding = "UTF-8")
+ven_2 = read.csv("ven_06_2.csv", encoding = "UTF-8")
+ven_1 = ven_1 %>%
+  separate(X1, c("party", "votes"), "% ")
+
+ven_1$votes = gsub(" votos Ver detalle", "", ven_1$votes)
+ven_1[4] = lapply(ven_1[4], function(y) as.numeric(gsub("\\.", "", y)))
+ven_1$party = trimws(gsub('[0-9]+', '', ven_1$party))
+ven_1$party = gsub("\\,", "", ven_1$party)
+ven_1$party = trimws(ven_1$party)
+ven_1 = ven_1[-1]
+# looks good
+
+ven_2 = ven_2 %>% filter(!(X0 == "Ficha Técnica"))
+ven_2 = ven_2 %>%
+  separate(X0, c("type", "votes"), ": ")
+
+ven_2$votes = gsub(" \\(.*", "", ven_2$votes)
+ven_2[4] = lapply(ven_2[4], function(y) as.numeric(gsub("\\.", "", y)))
+ven_2 = ven_2[-1]
+ven_2 = ven_2 %>% pivot_wider(names_from = type, values_from = votes)
+ven_2 = ven_2[-c(7,8)]
+identical(ven_2$`Total Votantes Escrutados`, ven_2$`Total Votos Escrutados`)
+# as this is true we can summarize the following as registered_voters
+ven_2 = add_column(ven_2, registered_voters = rowSums(ven_2[2:3]), .after = "country")
+ven_2 = ven_2[-c(3,4)]
+names(ven_2)[3:5] = c("total_votes", "valid_votes", "null_votes")
+ven_1 = ven_1 %>% pivot_wider(names_from = party, values_from = votes)
+ven_06 = left_join(ven_2, ven_1)
+ven_06$country = iconv(ven_06$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+ven_06$weird = countrycode(tolower(ven_06$country), "spanish2", "english", custom_dict = custom_dict)
+spanish = unlist(str_split("arabia saudita, checolovaquia, corea, gran bretana, grenada, guayana, palestina, qatar, san kitts y nevis, san vicente y las gr, suriname, usa", ", "))
+english = c( "saudi arabia",
+             "Czechoslovakia",
+             "Korea",
+             "great britain",
+             "Grenada",
+             "Guiana",
+             "Palestine",
+             "Qatar",
+             "Saint Kitts and Nevis",
+             "St. Vincent & Grenadines",
+             "Suriname",
+             "US")
+for (i in seq_along(spanish)){
+  ven_06$weird[tolower(ven_06$country) == spanish[i]] = english[i]
+}
+ven_06$country = countryname(ven_06$weird)
+ven_06 = ven_06[-20]
+ven_06 = main_function(ven_06, "MANUEL ROSALES", "YUDITH SALAZAR", 6, "HUGO CHAVEZ")
+ven_06 = extra_cols(ven_06, "Venezuela", "2006-12-03", "Presidential")
 #### Mauretania ----------------------------------------------------------------
 
 mau_pres_19 = read_xlsx("Mauretania/ResultatElection2019.xlsx")
@@ -1264,7 +1316,7 @@ batch_5 = bind_rows(ukr_leg06, geol_04, geol_08, geol_12, geol_16, geop_08, geop
                     ukr_leg12, ukr_leg14, ukr_leg19, ukr_leg07, 
                     ukr_leg02, ukr_pres10, ukr_pres14, ukr_pres19, tim_leg17, 
                     tim_leg18, saot_pres06, saot_pres11, sen_pres00, ven_13,
-                    pol_05_leg, mau_pres_19
+                    pol_05_leg, mau_pres_19, ven_06
                     )
 
 
