@@ -739,18 +739,14 @@ df.to_csv("ukraine_pres_2019_polstat.csv")
 ### Venezuela:
     
 url = "http://www.cne.gob.ve/divulgacionPresidencial/resultado_nacional.php?color=&c2=0&e=99"
-browser = webdriver.Chrome(ChromeDriverManager().install())
-browser.get(url)
-table = browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr[2]/td/table')
 
-countries = table.find_elements_by_tag_name('a')
-countries[1].get_attribute('href')
-table = browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[2]/table/tbody/tr/td/table')
-name = table.find_elements_by_tag_name('b')
-name[121].text
-# can't really find a solutuion here
+# this will be ugly 
+from selenium.common.exceptions import NoSuchElementException
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 def venezuela_scraper(link):
-    df_list = []
+    df_list_1 = []
+    df_list_2 = []
     country_list = []
     link_list = []
     browser = webdriver.Chrome(ChromeDriverManager().install())
@@ -763,8 +759,27 @@ def venezuela_scraper(link):
         link_list.append(countries[counter].get_attribute('href'))
     for counter, item in enumerate(link_list):
         browser.get(item)
-        df = pd.read_html(browser.find_element_by_xpath('//*[@id="wrap"]/main/div[2]/table').get_attribute('outerHTML'))[0]
-        
+        try:
+            df = pd.read_html(browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[2]/table/tbody/tr/td/table').get_attribute('outerHTML'))[0]
+            df.dropna(subset=1, inplace = True)
+            df = df[df[1].apply(lambda x: len(x) > 20)]
+            df.drop(0, axis = 1, inplace = True)
+            df_2 = pd.read_html(browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr[3]/td/table').get_attribute('outerHTML'))[0]
+            df.insert(0, 'country', country_list[counter])
+            df_2.insert(0, 'country', country_list[counter])
+            df_list_1.append(df)
+            df_list_2.append(df_2)
+        except KeyError:
+            pass
+    
+    final_df_1 = pd.concat(df_list_1, ignore_index=True, sort=False)
+    final_df_2 = pd.concat(df_list_2, ignore_index=True, sort=False)
+    return(final_df_1, final_df_2)
+
+df_1, df_2 = venezuela_scraper(url)
+
+df_1.to_csv("ven_06_1.csv")
+df_2.to_csv("ven_06_2.csv")
 
 
 
