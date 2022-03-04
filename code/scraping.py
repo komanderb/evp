@@ -517,10 +517,10 @@ def mace_scraper(link):
         polling_station.append(list_pol[counter].text)
         list_pol[counter].click()
         sleep(1)
-        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="div-results-table"]/div/table').get_attribute('outerHTML'))[0]
+        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="div-results-table"]/div/table').get_attribute('outerHTML'), decimal=',', thousands='.')[0]
         browser.find_element_by_xpath('//*[@id="procesim"]/img').click()
         sleep(1)
-        df_2 = pd.read_html(browser.find_element_by_xpath('//*[starts-with(@id,"popover")]/div[2]/div').get_attribute('outerHTML'))[0]
+        df_2 = pd.read_html(browser.find_element_by_xpath('//*[starts-with(@id,"popover")]/div[2]/div').get_attribute('outerHTML'), decimal=',', thousands='.')[0]
         df_1.insert(0, 'pol_stat', polling_station[counter])
         df_2.insert(0, 'pol_stat', polling_station[counter])
         df_list_1.append(df_1)
@@ -639,12 +639,179 @@ df_party.to_csv('bu_pres_2011_dic.csv')
 
 
 ### Ukraine
+#Legislative 2002
 url = "https://www.cvk.gov.ua/pls/vnd2002/webproc193vb639.html?kodvib=400"
 browser = webdriver.Chrome(ChromeDriverManager().install())
 browser.get(url)
 
 table = browser.find_element_by_xpath('/html/body/table[4]')
 df = pd.read_html(table.get_attribute('outerHTML'))[0]
-df.to_csv('ukraine_leg_2002')
+df.to_csv('ukraine_leg_2002.csv')
 
-### ukraine 
+### ukraine leg 2006 -> problems with translating and also getting information on polling station 
+url = "https://cvk.gov.ua/pls/vnd2006/W6P001-2.html"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+df = pd.read_html(browser.find_element_by_xpath('/html/body/table[5]').get_attribute('outerHTML'))[0]
+### ukraine leg 2007
+url = "https://www.cvk.gov.ua/pls/vnd2007/w6p336b49a.html?pt001f01=600&pf7331=226"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+
+##ukraine leg 2012
+url = "https://www.cvk.gov.ua/pls/vnd2012/wp314ept001f01=900.html"
+def ukraine_scraper(link):
+    countries = []
+    df_list = []
+    links= []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    table = browser.find_element_by_xpath('//*[@id="content"]/table[5]')
+    country_list = table.find_elements_by_class_name("a1small")
+    for counter, item in enumerate(country_list):
+        countries.append(country_list[counter].text)
+        links.append(country_list[counter].get_attribute('href'))
+    for counter, link in enumerate(links):
+        browser.get(link)
+        sleep(0.5)
+        df = pd.read_html(browser.find_element_by_xpath('//*[@id="content"]/table[4]').get_attribute('outerHTML'))[0]
+        df.insert(0, 'country', countries[counter])
+        df_list.append(df)
+        
+    final_df = pd.concat(df_list, ignore_index=True, sort=False)
+    return(final_df)    
+
+df = ukraine_scraper(url)
+df.to_csv('ukraine_leg_12.csv')
+
+## ukraine leg 2014
+url = "https://www.cvk.gov.ua/pls/vnd2014/wp314ept001f01=910.html"
+df = ukraine_scraper(url)
+df.to_csv('ukraine_leg_14.csv')
+
+## ukraine leg 2019
+#have to do slightly different approach
+url = "https://www.cvk.gov.ua/pls/vnd2019/wp314pt001f01=919.html"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+# also first step by hand in order to translate properly
+table = browser.find_element_by_xpath('//*[@id="wrap"]/main/div[2]/table')
+countries = table.find_elements_by_xpath('//a[@title="Voting results by country"]')
+country_list_19 = []
+links_ua = []
+for counter, item in enumerate(countries):
+    country_list_19.append(countries[counter].text)
+    links_ua.append(countries[counter].get_attribute('href'))
+    
+df_list = []
+# this will unfortunately not be translated
+for counter, link in enumerate(links_ua):
+    browser.get(link)
+    sleep(0.5)
+    df = pd.read_html(browser.find_element_by_xpath('//*[@id="wrap"]/main/div[2]/table').get_attribute('outerHTML'))[0]
+    df.insert(0, 'country', country_list_19[counter])
+    df_list.append(df)
+
+final_df = pd.concat(df_list, ignore_index=True, sort=False)
+final_df.to_csv('ukraine_leg_2019.csv')
+
+
+## ukraine
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+df = pd.read_html(browser.find_element_by_xpath('/html/body/table[6]').get_attribute('outerHTML'))[0]
+df.to_csv("ukraine_pres_2010_polstat.csv")
+
+browser = webdriver.Chrome(ChromeDriverManager().install())
+url = 'https://cvk.gov.ua/pls/vp2014/wp045pt001f01=702.html'
+browser.get(url)
+df = pd.read_html(browser.find_element_by_xpath('/html/body/table[5]').get_attribute('outerHTML'))[0]
+df.to_csv("ukraine_pres_2014_polstat.csv")
+url = 'https://www.cvk.gov.ua/pls/vp2019/wp045pt001f01=719.html'
+browser.get(url)
+df = pd.read_html(browser.find_element_by_xpath('//*[@id="pure-wrap"]/table').get_attribute('outerHTML'))[0]
+df.to_csv("ukraine_pres_2019_polstat.csv")
+
+# the rest is a bit problematic at least
+
+
+### Venezuela:
+    
+url = "http://www.cne.gob.ve/divulgacionPresidencial/resultado_nacional.php?color=&c2=0&e=99"
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+table = browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr[2]/td/table')
+
+countries = table.find_elements_by_tag_name('a')
+countries[1].get_attribute('href')
+table = browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[2]/table/tbody/tr/td/table')
+name = table.find_elements_by_tag_name('b')
+name[121].text
+# can't really find a solutuion here
+def venezuela_scraper(link):
+    df_list = []
+    country_list = []
+    link_list = []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    table = browser.find_element_by_xpath('/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr[2]/td/table')
+
+    countries = table.find_elements_by_tag_name('a')
+    for counter, item in enumerate(countries):
+        country_list.append(countries[counter].text)
+        link_list.append(countries[counter].get_attribute('href'))
+    for counter, item in enumerate(link_list):
+        browser.get(item)
+        df = pd.read_html(browser.find_element_by_xpath('//*[@id="wrap"]/main/div[2]/table').get_attribute('outerHTML'))[0]
+        
+
+
+
+## Venezuela 2013 
+
+url = 'http://www.cne.gob.ve/resultado_presidencial_2013/r/1/reg_990000.html'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+table = browser.find_element_by_xpath('//*[@id="regionNavigationBar"]')
+countries = table.find_elements_by_tag_name('a')
+countries[1].get_attribute("href")
+
+df = pd.read_html(browser.find_element_by_xpath('//*[@id="fichaTecnica"]/table').get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+# table is a bit weird -> will have to make the best out of it //
+
+def ven_scraper(link):
+    country_list = []
+    link_list = []
+    df_list_1 = []
+    df_list_2 = []
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(link)
+    table = browser.find_element_by_xpath('//*[@id="regionNavigationBar"]')
+    countries = table.find_elements_by_tag_name('a')
+    for counter, item in enumerate(countries):
+        country_list.append(countries[counter].text)
+        link_list.append(countries[counter].get_attribute("href"))
+    
+    for counter, item in enumerate(link_list):
+        browser.get(item)
+        try:
+            df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="tablaResultados"]/table').get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+            df_2 = pd.read_html(browser.find_element_by_xpath('//*[@id="fichaTecnica"]/table').get_attribute('outerHTML'), decimal=',', thousands='.')[0]
+            df_1.insert(0, 'country', country_list[counter])
+            df_2.insert(0, 'country', country_list[counter])
+            df_list_1.append(df_1)
+            df_list_2.append(df_2)
+        except NoSuchElementException:
+            pass
+        
+        
+    final_df_1 = pd.concat(df_list_1, ignore_index=True, sort=False)
+    final_df_2 = pd.concat(df_list_2, ignore_index=True, sort=False)
+    return(final_df_1, final_df_2)
+    
+
+df_1, df_2 = ven_scraper(url)
+
+df_1.to_csv("ven_13_1.csv")
+df_2.to_csv("ven_13_2.csv")
