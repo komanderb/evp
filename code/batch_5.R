@@ -726,6 +726,27 @@ names(ser_pres17) = serbia_names
 ser_pres17$country = countryname(ser_pres17$country)
 ser_pres17 = main_function(ser_pres17, "Sasa Jankovic", "Nenad Canak", 6, "Aleksandar Vucic")
 ser_pres17 = extra_cols(ser_pres17, "Serbia", "2017-04-02", "Presidential")
+
+## Presidential 2008
+
+ser_pres08 = read_xlsx("Serbia/ser_pres08_abroad.xlsx")
+# ignore polling station level data (it is aggregated already)
+ser_pres08 = ser_pres08 %>% filter(is.na(Number))
+identical(ser_pres08$`The number of voters who went to the polls`, ser_pres08$`Number of voters who voted`)
+# both describe total votes so can drop one
+ser_pres08 = ser_pres08[-c(2,3,5,6,8)]
+names(ser_pres08)[1:3] = c("country", "registered_voters", "total_votes")
+ser_pres08 = add_column(ser_pres08, valid_votes = rowSums(ser_pres08[4:12]), .after = "total_votes")
+names(ser_pres08) = iconv(names(ser_pres08), from = 'UTF-8', to = 'ASCII//TRANSLIT')
+ser_pres08 = main_function(ser_pres08, "Tomislav Nikolic", "Milanka Karic", 5, "Tomislav Nikolic")
+ser_pres08 = extra_cols(ser_pres08, "Serbia", "2008-01-20", "Presidential")
+ser_pres08$country =  countryname(ser_pres08$country)
+
+ser_pres08_coo = read_xlsx("Serbia/ser_pres08_national.xlsx")
+ser_pres08_coo = ser_pres08_coo %>% filter(is.na(Number))
+test = ser_pres08_coo[-c(1:5),]
+colSums(test[4:15])
+#this is a dead end
 ##### Ukraine ------------------------------------------------------------------
 
 ukr_leg12 = read.csv("ukraine_leg_12.csv", encoding = "UTF-8")
@@ -1302,6 +1323,27 @@ pol_leg05_coo = add_column(pol_leg05_coo, country = "Poland", .before = 1)
 # this will have more parties than abroad //
 pol_leg05_coo = main_function(pol_leg05_coo, "1 - Ruch Patriotyczny", "19 - Mniejszosc Niemiecka Slaska", 6, "6 - Prawo i Sprawiedliwosc")
 pol_leg05_coo = extra_cols(pol_leg05_coo, "Poland", "2005-09-25", "Legislative")
+
+#### Colombia 2010 -------------------------------------------------------------
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/leg_10")
+
+my_files <- list.files(pattern = "\\.xls$")
+df_list = lapply(my_files, read_xls)
+names(df_list) <- gsub("\\.xls$", "", my_files)
+
+for(i in seq_along(df_list))
+  df_list[[i]]$country = names(df_list)[i]
+
+colleg_10 = do.call(rbind, df_list)
+row.names(colleg_10) = NULL
+colleg_10 = colleg_10[-c(1, 4:7)]
+colleg_10 = colleg_10 %>% pivot_wider(names_from = NOMBRE, values_from = VOTACION, values_fill = 0)
+colleg_10$country = countryname(colleg_10$country)
+colleg_10$country[is.na(colleg_10$country)] = "Curaçao"
+names(colleg_10)[13:16] = c("blanco_votes", "valid_votes", "null_votes", "unmarked_votes")
+## unmarked votes again
+colleg_10 = main_function(colleg_10, "PARTIDO LIBERAL COLOMBIANO", "MOVIMIENTO INDEPENDIENTE DE RENOVACION ABSOLUTA MIRA", 6, "PARTIDO SOCIAL DE UNIDAD NACIONAL PARTIDO DE LA U")
+colleg_10 = extra_cols(colleg_10, "Colombia", "2010-03-14", "Legislative")
 
 ##### Dataframe for Batch ------------------------------------------------------
 
