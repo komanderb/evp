@@ -166,7 +166,8 @@ for (i in 1:9){
 
 lat_dic = lat_11[c(1,36)]
 lat_11$country = countryname(lat_11$weird)
-lat_11 = lat_11[-36]
+lat_11 = lat_11[-c(6,36)]
+names(lat_11)[5] = "total_votes"
 #2014
 lat_14 = read.csv('lat_leg_14.csv', encoding = 'UTF-8')
 lat_party = read.csv('lat_14_dic.csv', encoding = 'UTF-8')
@@ -672,6 +673,8 @@ cz_10$country[is.na(cz_10$country)] = 'Kosovo'
 
 #### Indonesia =================================================================
 #Legislative 2019
+custom_dict$indonesian = tolower(countrycode::codelist$cldr.name.id)
+#
 ind_19 = read.csv('indo_leg_19.csv')
 ind_19$WILAYAH =  gsub("\\(.*", "", ind_19$WILAYAH)
 ind_19$WILAYAH = trimws(ind_19$WILAYAH)
@@ -680,15 +683,8 @@ ind_19 = ind_19[-c(1,19)]
 ind_19 = ind_19 %>% filter(!(PKB == 'Data belum tersedia'))
 ind_19[2:17] = lapply(ind_19[2:17], function(y) as.numeric(y))
 ind_19 = renamer(ind_19, 1)
-ind_19 = aggregate(c(ind_19[2:17]), by = ind_19[1], sum)
-ind_19 = add_column(ind_19, valid_votes = rowSums(ind_19[2:17]), .after = 'country')
-ind_19 = main_function(ind_19, 'PKB', 'PKPI', 3, 'PDIP')
-ind_19 = extra_cols(ind_19, 'Indonesia', '2019-04-17', 'Legislative')
-# country missing // 
 ind_19$country = trimws(ind_19$country)
-custom_dict$indonesian = tolower(countrycode::codelist$cldr.name.id)
 ind_19$weird = countrycode(tolower(ind_19$country), 'indonesian', 'english', custom_dict = custom_dict)
-
 indonesian = "brunei darussalam, chile, ethiopia, hongaria, inggris, kazakhstan, libya, mexico, morocco, myanmar, perancis, republik ceko, republik rakyat tiongkok, sabah, slowakia, sri langka, ukrania"
 indonesian = unlist(strsplit(indonesian, ", "))
 english = "Brunei Darussalam, Chile, Ethiopia, Hungary, United Kingdom, Kazakhstan, Libya, Mexico, Morocco, Myanmar, France, Czech Republic, People's Republic of China, Sabah, Slovakia, Sri Lanka, Ukraine"
@@ -700,10 +696,16 @@ for (i in 1:17){
 
 ind_19$weird = countryname(ind_19$weird)
 # not matched Sabah (whatever that is)
-ind_dic = ind_19[c(1,40)]
+ind_dic = ind_19[c(1,18)]
 ind_19$country = ind_19$weird
-ind_19$country[is.na(ind_19$country)] = "Sabah (?)"
-ind_19 = ind_19[-c(40)]
+ind_19$country[is.na(ind_19$country)] = "Sabah" ## problematic ()
+ind_19 = ind_19[-c(18)]
+ind_19 = aggregate(c(ind_19[2:17]), by = ind_19[1], sum)
+ind_19 = add_column(ind_19, valid_votes = rowSums(ind_19[2:17]), .after = 'country')
+ind_19 = main_function(ind_19, 'PKB', 'PKPI', 3, 'PDIP')
+ind_19 = extra_cols(ind_19, 'Indonesia', '2019-04-17', 'Legislative')
+
+
 
 # Presidential 2019
 indp_19 = read.csv('indo_pres_19.csv')
@@ -713,13 +715,8 @@ indp_19$WILAYAH = gsub(".*,", "", indp_19$WILAYAH)
 indp_19 = indp_19[-1]
 # I will translate candidate names into party straight away -> easy here 
 names(indp_19) = c('country', 'PDIP', 'Gerindra')
-indp_19 = aggregate(c(indp_19[2:3]), by = indp_19[1], sum)
-indp_19 = add_column(indp_19, valid_votes = rowSums(indp_19[2:3]), .after = 'country')
-indp_19 = main_function(indp_19, 'PDIP', 'Gerindra', 3, 'PDIP')
-indp_19 = extra_cols(indp_19, 'Indonesia', '2019-04-17', 'Presidential')
-
 indp_19$weird = countrycode(trimws(indp_19$country), 'country', 'weird', custom_dict = ind_dic)
-indonesian = " Bosnia-Herzegovina, Kroasia, Kuba, Madagaskar, Sabah, Suriah, Zimbabwe"
+indonesian = "Bosnia-Herzegovina, Kroasia, Kuba, Madagaskar, Sabah, Suriah, Zimbabwe"
 indonesian = unlist(strsplit(indonesian, ", "))
 english = c("Bosnia", "Croatia", "Cuba", "Madagascar", "Sabah", "Syria", "Zimbabwe")
 for (i in 1:7){
@@ -727,8 +724,13 @@ for (i in 1:7){
 }
 
 indp_19$country = countryname(indp_19$weird)
-indp_19 = indp_19[-12]
-# again Sabah not matched // 
+indp_19 = indp_19[-4]
+indp_19$country[is.na(indp_19$country)] = "Sabah" # unless its malaysia
+indp_19 = aggregate(c(indp_19[2:3]), by = indp_19[1], sum)
+indp_19 = add_column(indp_19, valid_votes = rowSums(indp_19[2:3]), .after = 'country')
+indp_19 = main_function(indp_19, 'PDIP', 'Gerindra', 3, 'PDIP')
+indp_19 = extra_cols(indp_19, 'Indonesia', '2019-04-17', 'Presidential')
+indp_19 %>% filter(duplicated(country))
 ### Ecuador:--------------------------------------------------------------------
 # Legislative 2009
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Ecuador/Leg. 2009 National MPs")
@@ -1001,14 +1003,6 @@ mol_16$country =  gsub("(.*)-.*", "\\1", mol_16$country)
 mol_16$country = gsub("-.*", "", mol_16$country)
 mol_16[2:15] = lapply(mol_16[2:15], function(y) as.numeric(y))
 names(mol_16) = iconv(names(mol_16), from = "UTF-8", to = 'ASCII//TRANSLIT')
-# a bit problematic -> will translate names by hand //
-mol_16 = aggregate(c(mol_16[2:15]), by = mol_16[1], sum)
-names(mol_16)[5:14] = c('Partidul Democrat din Moldova','Partidul Liberal', 'Partidul Popular European din Moldova','Partidul Nostru',
-                        'Partidul Actiune si Solidaritate','Partidul Socialistilor din Republica Moldova',
-                        'Silvia Radu', 'Maia Laguta', 'Partidul Dreapta', "Valeriu Ghiletchi")
-
-mol_16 = main_function(mol_16, 'Partidul Democrat din Moldova', "Valeriu Ghiletchi", 6, 'Partidul Socialistilor din Republica Moldova')
-mol_16 = extra_cols(mol_16, 'Moldova', '2016-10-30', 'Presidential')
 mol_16$country = iconv(mol_16$country, from = "UTF-8", to = 'ASCII//TRANSLIT')
 mol_16$country = trimws(mol_16$country)
 custom_dict$romanian = iconv(custom_dict$romanian, from = "UTF-8", to = 'ASCII//TRANSLIT')
@@ -1020,8 +1014,15 @@ for (i in 1:5){
   mol_16$weird[tolower(mol_16$country) == romanian[i]] = english[i]
 }
 mol_16$country = countryname(mol_16$weird)
-mol_16 = mol_16[-31]
+mol_16 = mol_16[-16]
+mol_16 = aggregate(c(mol_16[2:15]), by = mol_16[1], sum)
+# a bit problematic -> will translate names by hand //
+names(mol_16)[5:14] = c('Partidul Democrat din Moldova','Partidul Liberal', 'Partidul Popular European din Moldova','Partidul Nostru',
+                        'Partidul Actiune si Solidaritate','Partidul Socialistilor din Republica Moldova',
+                        'Silvia Radu', 'Maia Laguta', 'Partidul Dreapta', "Valeriu Ghiletchi")
 
+mol_16 = main_function(mol_16, 'Partidul Democrat din Moldova', "Valeriu Ghiletchi", 6, 'Partidul Socialistilor din Republica Moldova')
+mol_16 = extra_cols(mol_16, 'Moldova', '2016-10-30', 'Presidential')
 
 ## Legislative 2019
 paths = c("Moldova/Raw/Circumscription 49 Proportional Republica Moldova.xlsx", 
@@ -1124,7 +1125,7 @@ parl_18$country = c("Argentina", "Brazil", "US", "Spain")
 parl_18 = add_column(parl_18, registered_voters = NA, .after = 'election_type')
 parl_18 = add_column(parl_18, invalid_votes = NA, .after = 'valid_votes')
 batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cro, 
-                    ecp_13, ecp_09, ecp_06, ec_13, ec_09, indp_19, ind_19, cz_10, cz_06,
+                    ecp_13, ecp_09, ecp_06, ec_13, ec_09, indp_19, ind_19, cz_10, #cz_06, as all party votes are the same
                     czp_18, czp_13, polp_15, polp_10, polp_05, polp_00, pol_19, pol_15, 
                     pol_11, pol_07, pol_01, lat_18, lat_14, lat_11, lat_10, lat_06, lat_02)
 
@@ -1132,5 +1133,13 @@ batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cr
 # about the meaning 
 names(batch_3)[1] <- 'country_of_residence' 
 batch_3 = add_column(batch_3, cor_iso3 = countrycode(batch_3$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+batch_3 = add_column(batch_3, coo_iso3 = countrycode(batch_3$country_of_origin , 'country.name', 'iso3c'), .after = 'country_of_origin')
+number_list = c(13)
+start = 13
+while (start < 68){
+  start = start +2
+  number_list = append(number_list, start)
+}
+batch_3 = add_column(batch_3, valid_votes2 = rowSums(batch_3[number_list], na.rm = T), .after = "valid_votes")
 # Problems here for several countries -> either military base or non existent or old countries with no Iso3c or so
 write.csv(batch_3,"batch_3.csv", row.names = FALSE)

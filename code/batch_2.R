@@ -340,10 +340,74 @@ df_list[[4]] = row_to_names(df_list[[4]], 1)
 
 ita_06_e <- do.call(rbind, df_list)
 ita_06_e$Ente = trimws(ita_06_e$Ente)
-countrycode(tolower(ita_06_e$Ente), 'italian', 'english', custom_dict = custom_dict)
-## too many Na's 
-# will do later 
-ita_06 = main_function(ita_06, 'FORZA ITALIA', 'U.S.E.I.', 2, "L'UNIONE")
+ita_06_e$weird = countrycode(tolower(ita_06_e$Ente), 'italian', 'english', custom_dict = custom_dict)
+italian = unlist(str_split("bosnia-erzegovina, circoscrizione autonoma, costarica, ex repubblica jugoslava di macedonia, federazione russa, guinea bissau, peru', repubblica ceca, repubblica democratica del congo, repubblica di corea, repubblica popolare cinese, repubblica popolare democratica di corea, santa sede, sao tome' e principe, serbia e montenegro, stati uniti d'america, sud africa", ", "))
+for (i in italian)
+  print(i)
+
+english = c("bosnia and herzegovina",
+            "autonomous district",
+            "Costa Rica",
+            "macedonia",
+            "Russian federation",
+            "guinea bissau",
+            "peru '",
+            "czech republic",
+            "democratic republic of the congo",
+            "republic of korea",
+            "People's Republic of China",
+            "democratic people's republic of korea",
+            "Vatican",
+            "São Tomé & Príncipe",
+            "serbia and montenegro",
+            "united states of america",
+            "south africa")
+
+for (i in seq_along(italian)){
+  ita_06_e$weird[tolower(ita_06_e$Ente) == italian[i]] = english[i]
+}
+ita_06_e$Ente = countryname(ita_06_e$weird)
+ita_06_e$Ente[is.na(ita_06_e$Ente)] = "autonomous district" #?
+ita_06_e = ita_06_e[-6]
+# rename is missing but first turn to the other data
+ita_06$weird = countrycode(tolower(ita_06$country), "italian", "english", custom_dict = custom_dict)
+italian = unlist(str_split("bosnia-erzegovina, brasil, chile, circoscrizione autonoma, costarica, ex repubblica jugoslava di macedonia, federazione russa, guinea bissau, repubblica ceca, repubblica democratica del congo, repubblica di corea, repubblica popolare cinese, repubblica popolare democratica di corea, santa sede, sao tome' e principe, serbia e montenegro, stati uniti d'america, sud africa", ", "))
+for (i in italian)
+  print(i)
+
+english = c("bosnia and herzegovina",
+            "brazil",
+            "chile",
+            "autonomous district",
+            "Costa Rica",
+            "macedonia",
+            "Russian federation",
+            "guinea bissau",
+            "czech republic",
+            "democratic republic of the congo",
+            "republic of korea",
+            "People's Republic of China",
+            "democratic people's republic of korea",
+            "Vatican",
+            "São Tomé & Príncipe",
+            "serbia and montenegro",
+            "united states of america",
+            "south africa")
+
+for (i in seq_along(italian)){
+  ita_06$weird[tolower(ita_06$country) == italian[i]] = english[i]
+}
+
+ita_06$country = countryname(ita_06$weird)
+ita_06$country[is.na(ita_06$country)] = "autonomous district" #?
+ita_06 = ita_06[-16]
+names(ita_06_e) = c("country", "registered_voters", "total_votes", "null_votes", "invalid_votes")
+ita_06_e[2:5] = lapply(ita_06_e[2:5], function(y) as.numeric(y))
+ita_06 = left_join(ita_06_e, ita_06)
+ita_06 = add_column(ita_06, valid_votes = rowSums(ita_06[6:19]), .after = "total_votes")
+ita_06 = main_function(ita_06, 'FORZA ITALIA', 'U.S.E.I.', 7, "L'UNIONE")
+ita_06 = extra_cols(ita_06, "Italy", "2006-04-09", "Legislative")
+
 # 2013 
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Italy/Italy Leg. 2013 Sources")
 my_files <- list.files(pattern = "\\.csv$")
@@ -552,11 +616,25 @@ mozp_14$country <- mozl_14$country
 # cz_17 is the longest
 cz_17 = add_column(cz_17, null_votes = NA, .after = 'valid_votes')
 cz_17 = add_column(cz_17, blanco_votes = NA, .after= 'null_votes')
-final_df_2 = bind_rows(cz_17, cz_13, Hon_01, Hon_05, Hon_09, Hon_13, Hon_17, fr_02, bra_02, col_02, 
-                       col_14, ita_13, mozl_04, mozp_04, mozl_09, mozp_09, mozl_14, mozp_14)
-final_df_2 <- final_df_2[-c(63)]
-names(final_df_2)[1] <- 'country_of_residence' 
-final_df_2 = add_column(final_df_2, cor_iso3 = countrycode(final_df_2$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
-# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles
-write.csv(final_df_2,"batch_2.csv", row.names = FALSE)
+cz_17 = add_column(cz_17, invalid_votes = NA, .after= 'blanco_votes')
+batch_2 = bind_rows(cz_17, cz_13, Hon_01, Hon_05, Hon_09, Hon_13, Hon_17, fr_02, bra_02, col_02, 
+                       col_14, ita_13, ita_06,  mozl_04, mozp_04, mozl_09, mozp_09, mozl_14, mozp_14)
+batch_2 <- batch_2[-c(63)]
+names(batch_2)[1] <- 'country_of_residence' 
+batch_2 = add_column(batch_2, cor_iso3 = countrycode(batch_2$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+batch_2 = add_column(batch_2, coo_iso3 = countrycode(batch_2$country_of_origin, 'country.name', 'iso3c'), .after = 'country_of_origin')
+
+number_list = c(13)
+start = 13
+while (start < 61){
+  start = start +2
+  number_list = append(number_list, start)
+}
+
+rowSums(batch_2[number_list], na.rm = T)
+batch_2 = add_column(batch_2, valid_votes2 = rowSums(batch_2[number_list], na.rm = T), .after = "valid_votes")
+
+# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles, Serbia and Montonegro (but thats okay)
+write.csv(batch_2,"batch_2.csv", row.names = FALSE)
+
  
