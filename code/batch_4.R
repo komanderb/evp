@@ -696,7 +696,7 @@ bu_11 = extra_cols(bu_11, 'Bulgaria', '2011-10-23', 'Presidential')
 # Legislative 2006:
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Peru/leg_06/named_files")
 my_files <- list.files(pattern = "\\.csv$")
-df_list <- lapply(my_files, read.csv, encoding = "UTF-8")
+df_list <- lapply(my_files, read.csv, encoding = "UTF-8", colClasses = "character")
 names(df_list) = gsub("\\.csv$", "", my_files)
 for (i in seq_along(df_list)){
   df_list[[i]]$country = names(df_list)[i]
@@ -772,7 +772,7 @@ for (i in seq_along(peru)){
   per_06$weird[per_06$country == peru[i]] = english[i]
 }
 per_06$country = countryname(per_06$weird)
-per_06 = perl_06[-52]
+per_06 = per_06[-52]
 
 ## Presidential 2016
 
@@ -1014,6 +1014,7 @@ col_06 = col_06[-77]
 
 
 ## Legislative 2010
+#this is in batch 5 now
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/ocr_files")
 
 my_files <- list.files(pattern = "\\.xls$")
@@ -1080,7 +1081,7 @@ ro_leg_00 = add_column(ro_leg_00, blanco_votes = NA, .after = 'null_votes')
 ro_leg_00 = add_column(ro_leg_00, invalid_votes = NA, .after = 'blanco_votes')
 
 batch_4 = bind_rows(ro_leg_00, bo_19, ind_14, ro_leg_04, ro_pres00, ro_pres04,
-                    ro_leg08, ro_16, rol16, buleg_13, buleg_09, col_10, per_16, per_06, perl_06, bu_05,
+                    ro_leg08, ro_16, rol16, buleg_13, buleg_09, per_16, per_06, perl_06, bu_05,
                     bu_11, cz_02, col_06)
 
 # only colombia 2002 missing //
