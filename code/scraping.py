@@ -830,3 +830,80 @@ df_1, df_2 = ven_scraper(url)
 
 df_1.to_csv("ven_13_1.csv")
 df_2.to_csv("ven_13_2.csv")
+
+### Czech Republic 2006
+
+
+url = 'https://www.volby.cz/pls/ps2006/ps36?xjazyk=CZ'
+browser = webdriver.Chrome(ChromeDriverManager().install())
+browser.get(url)
+
+table = browser.find_element_by_xpath('//*[@id="publikace"]/table')
+
+## google translate manually!#
+
+df = pd.read_html(table.get_attribute('outerHTML'))[0]
+
+
+
+def special_cz_scraper(link, df):
+    link_list = []
+    df_list = []
+    
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(url)
+    table = browser.find_element_by_xpath('//*[@id="publikace"]/table')
+    rows = table.find_elements_by_tag_name('tr')
+    for counter, item in enumerate(rows):
+        if counter < 1:
+            pass
+        else:
+            cell = rows[counter].find_element_by_class_name('cislo')
+            link_list.append(cell.find_element_by_tag_name('a').get_attribute('href'))
+    
+    for counter, item in enumerate(link_list):
+        browser.get(item)
+        df_1 = pd.read_html(browser.find_element_by_xpath('//*[@id="publikace"]/table').get_attribute('outerHTML'))[0]
+        df_1.set_axis(['registered_voters', 'V', 'W', 'total_votes', 'valid_votes', 'Z'], axis=1, inplace=True)
+        df_1.drop(['V', 'W', 'Z'], axis = 1, inplace = True)
+        
+        df_2 = pd.read_html(browser.find_element_by_xpath('//*[@id="inner"]/div[1]/table').get_attribute('outerHTML'))[0]
+        df_2.set_axis(['V', 'W', 'X', 'Y', 'Z'], axis=1, inplace=True)
+        df_2.drop(['W', 'Y', 'Z'], axis = 1, inplace = True)
+        df_2 = df_2.set_index('V').T
+        df_3 = pd.read_html(browser.find_element_by_xpath('//*[@id="inner"]/div[2]/table').get_attribute('outerHTML'))[0]#
+        df_3.set_axis(['V', 'W', 'X', 'Y', 'Z'], axis=1, inplace=True)
+        df_3.drop(['W', 'Y', 'Z'], axis = 1, inplace = True)
+        df_3 = df_3.set_index('V').T
+        df_1.reset_index(drop=True, inplace=True)
+        df_2.reset_index(drop=True, inplace=True)
+        df_3.reset_index(drop=True, inplace=True)#
+
+        df_temp = pd.concat([df_1, df_2, df_3], axis = 1, sort=False)
+        df_list.append(df_temp)
+    
+    final_df = pd.concat(df_list, ignore_index=True, sort=False)
+    final_df.reset_index(drop=True, inplace=True)
+    final_df = pd.concat([df, final_df], axis = 1, sort = False)
+    return(final_df)
+
+
+cz_df = special_cz_scraper(url, df)
+cz_df.to_csv('cz_06_leg.csv')
+
+## just party dictionary missing //
+url_party = 'https://www.volby.cz/pls/ps2006/ps311?xjazyk=CZ&xkraj=3&xobec=999997&xsvetadil=EV&xzeme=8&xokrsek=1'
+browser.get(url_party)
+# still at the same url / 
+df_2 = pd.read_html(browser.find_element_by_xpath('//*[@id="inner"]/div[1]/table').get_attribute('outerHTML'))[0]
+df_2.set_axis(['party_number', 'party_name', 'X', 'Y', 'Z'], axis=1, inplace=True)
+df_2.drop(['X', 'Y', 'Z'], axis = 1, inplace = True)
+df_3 = pd.read_html(browser.find_element_by_xpath('//*[@id="inner"]/div[2]/table').get_attribute('outerHTML'))[0]#
+df_3.set_axis(['party_number', 'party_name', 'X', 'Y', 'Z'], axis=1, inplace=True)
+df_3.drop(['X', 'Y', 'Z'], axis = 1, inplace = True)
+
+df_party = pd.concat([df_2, df_3], ignore_index=True, sort = False)
+
+df_party.to_csv('cz_leg06_partydic.csv')
+
+
