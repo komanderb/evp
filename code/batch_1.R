@@ -1181,7 +1181,18 @@ batch_1 <- bind_rows(CoLeg_18, CoPres_18, frPres_07, frPres_12, frPres_17,
                       BraPres_14, BraPres_18, CroParl_03, CroParl_07, CroParl_11, CroParl_15, CroParl_16,
                       CroPres_05, CroPres_09, CroPres_14, CroPres_19, DorPres_04, DorPres_08, DorPres_12, DorPres_16,
                       DorLeg_12, fr_12, fr_17)
-#final_df <- add_column(final_df, iso3c = countrycode(final_df$country, 'country.name', 'iso3c'), .after = 'country')
+names(batch_1)[1] <- 'country_of_residence' 
+batch_1 = add_column(batch_1, cor_iso3 = countrycode(batch_1$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+batch_1 = add_column(batch_1, coo_iso3 = countrycode(batch_1$country_of_origin , 'country.name', 'iso3c'), .after = 'country_of_origin')
+number_list = c(13)
+start = 13
+while (start < 97){
+  start = start +2
+  number_list = append(number_list, start)
+}
+number_list
+batch_1 = add_column(batch_1, valid_votes2 = rowSums(batch_1[number_list], na.rm = T), .after = "valid_votes")
+
 write.csv(batch_1,"batch_1.csv", row.names = FALSE)
 # apparently for legislative croatia 2011 national winner is not included in data??
 
