@@ -1,4 +1,4 @@
-# Batch 2 / 
+# Batch 3 / 
 ### Loading packages------------------------------------------------------------
 library(countrycode)
 library(plyr)
@@ -607,46 +607,24 @@ czp_18$country = countryname(czp_18$country)
 
 
 ## Legislative 2006 
-cz_06 = read.csv("Czechia/leg_2006/result (6).csv", encoding = 'UTF-8')
-cz_06_names = read.csv("Czechia/leg_2006/result (7).csv", encoding = 'UTF-8')
-cz_06 = cz_06[-c(1:7, 9:11, 21:44)]
-names(cz_06)[c(1:3,6,8,9)] = c('country', 'registered_voters', 'total_votes', 'valid_votes',
-                               'party_number', 'party_votes')
-cz_06 = cz_06[c(1:3,6,8,9)]
-cz_06_names = cz_06_names[c(17,18)]
-cz_06_names = cz_06_names %>% filter(!duplicated(KRAJ__STRANA__KSTRANA))
-cz_06_names$KRAJ__STRANA__NAZ_STR = iconv(cz_06_names$KRAJ__STRANA__NAZ_STR, from = 'UTF-8', to = 'ASCII//TRANSLIT')
-names(cz_06_names) = c('party_code', 'party_name')
-cz_06$party_number = countrycode(cz_06$party_number, 'party_code', 'party_name', custom_dict = cz_06_names)
-cz_06$country = iconv(cz_06$country, from = 'UTF-8', to = 'ASCII//TRANSLIT')
-names(cz_06)[5] = 'party_name'
-#write.csv(cz_06, 'cz_leg_06.csv')
 
-cz_06 = cz_06 %>% pivot_wider(names_from = party_name,values_from = party_votes)
-cz_06 = main_function(cz_06, 'Strana zdraveho rozumu', 'STRANA ROVNOST SANCI', 5, 'Obcanska demokraticka strana')
-cz_06 = extra_cols(cz_06, 'Czechia', '2006-06-02', 'Legislative')
+cz_06 = read.csv("cz_06_leg.csv", encoding = "UTF-8")
+cz_06_names = read.csv("cz_leg06_partydic.csv", encoding = "UTF-8")
 
-custom_dict$czech = tolower(countrycode::codelist$cldr.name.cs)
-custom_dict$czech = iconv(custom_dict$czech, from = 'UTF-8', to = 'ASCII//TRANSLIT')
-cz_06$weird = countrycode(tolower(cz_06$country), 'czech', 'english', custom_dict = custom_dict)
-czech = "korejska lid.demokr.r, korejska republika, spojene arabske emira, srbsko a cerna hora, svaty stolec"
-czech = unlist(strsplit(czech, ", "))
+cz_06_names$party_name = iconv(cz_06_names$party_name, from = "UTF-8", to = 'ASCII//TRANSLIT')
+cz_06_names = cz_06_names[-20,]
 
-english = "Democratic People's Republic of Korea, Republic of Korea, United Arab Emirates, Serbia and Montenegro, Holy See"
-english = unlist(strsplit(english, ", "))
-english = countryname(english)
-for (i in 1:5){
-  cz_06$weird[tolower(cz_06$country) == czech[i]] = english[i]
-}
-
-cz_06$country = countryname(cz_06$weird)
-cz_06 = cz_06[-48]
-
-# big problems -> all the votes have the same value!! for each country
-
+cz_06 = cz_06[-c(1,2,4,5,28)]
+cz_06$Country.and.territory = countryname(cz_06$Country.and.territory)
+cz_06$Country.and.territory[is.na(cz_06$Country.and.territory)] = "Russia"
+cz_06 = renamer(cz_06, 1)
+cz_06 = aggregate(c(cz_06[2:23]), by = cz_06[1], sum)
+names(cz_06)[5:23] = cz_06_names$party_name
+# sorry for the state of the names but thats literally from the website 
+cz_06 = main_function(cz_06, "Strana zdraveho rozumu", "STRANA ROVNOST SANCI", 5, "Obcanska demokraticka strana")
+cz_06 = extra_cols(cz_06, "Czechia", "2006-06-02", "Legislative")
 
 ## legislative 2010
-
 cz_10 = read.csv("Czechia/leg_2010/result (4).csv", encoding = 'UTF-8')
 cz_10 = cz_10[-c(1:6, 8:11, 21:44)]
 names(cz_10)[c(1:3,6,8,9)] = c('country', 'registered_voters', 'total_votes', 'valid_votes',
@@ -1125,7 +1103,7 @@ parl_18$country = c("Argentina", "Brazil", "US", "Spain")
 parl_18 = add_column(parl_18, registered_voters = NA, .after = 'election_type')
 parl_18 = add_column(parl_18, invalid_votes = NA, .after = 'valid_votes')
 batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cro, 
-                    ecp_13, ecp_09, ecp_06, ec_13, ec_09, indp_19, ind_19, cz_10, #cz_06, as all party votes are the same
+                    ecp_13, ecp_09, ecp_06, ec_13, ec_09, indp_19, ind_19, cz_10, cz_06,
                     czp_18, czp_13, polp_15, polp_10, polp_05, polp_00, pol_19, pol_15, 
                     pol_11, pol_07, pol_01, lat_18, lat_14, lat_11, lat_10, lat_06, lat_02)
 
@@ -1133,6 +1111,7 @@ batch_3 = bind_rows(parl_18, parl_13, par_18, par_13, mol_19, mol_16, mol_14, cr
 # about the meaning 
 names(batch_3)[1] <- 'country_of_residence' 
 batch_3 = add_column(batch_3, cor_iso3 = countrycode(batch_3$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+# Problems here for several countries -> either military base or non existent or old countries with no Iso3c or so
 batch_3 = add_column(batch_3, coo_iso3 = countrycode(batch_3$country_of_origin , 'country.name', 'iso3c'), .after = 'country_of_origin')
 number_list = c(13)
 start = 13
@@ -1141,5 +1120,5 @@ while (start < 68){
   number_list = append(number_list, start)
 }
 batch_3 = add_column(batch_3, valid_votes2 = rowSums(batch_3[number_list], na.rm = T), .after = "valid_votes")
-# Problems here for several countries -> either military base or non existent or old countries with no Iso3c or so
+
 write.csv(batch_3,"batch_3.csv", row.names = FALSE)
