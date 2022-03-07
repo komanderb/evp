@@ -563,7 +563,7 @@ mozl_09 <- aggregate(c(mozl_09[7:14]), by = mozl_09[1], sum)
 mozl_09 <- renamer(mozl_09,1)
 names(mozl_09) <- gsub("[.]*$|[.]*(?=[.])", "",names(mozl_09), perl = TRUE)
 names(mozl_09) <- gsub("\\.", " ", names(mozl_09))
-mozl_09 <- add_column(mozl_09, valid_votes = rowSums(mozl_09[3:7], na.rm = T), .after = "country")
+mozl_09 <- add_column(mozl_09, valid_votes = rowSums(mozl_09[3:6], na.rm = T), .after = "country")
 mozl_09 <- main_function(mozl_09, 'FRELIMO', 'UM', 7, 'FRELIMO')
 names(mozl_09)[3:6] <- c('registered_voters', 'blanco_votes', 'null_votes', 'total_votes')
 mozl_09 <- extra_cols(mozl_09, "Mozambique", "2009-10-28", 'Legislative')
@@ -622,6 +622,7 @@ batch_2 = bind_rows(cz_17, cz_13, Hon_01, Hon_05, Hon_09, Hon_13, Hon_17, fr_02,
 batch_2 <- batch_2[-c(63)]
 names(batch_2)[1] <- 'country_of_residence' 
 batch_2 = add_column(batch_2, cor_iso3 = countrycode(batch_2$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles, Serbia and Montonegro (but thats okay)
 batch_2 = add_column(batch_2, coo_iso3 = countrycode(batch_2$country_of_origin, 'country.name', 'iso3c'), .after = 'country_of_origin')
 
 number_list = c(13)
@@ -631,10 +632,8 @@ while (start < 61){
   number_list = append(number_list, start)
 }
 
-rowSums(batch_2[number_list], na.rm = T)
 batch_2 = add_column(batch_2, valid_votes2 = rowSums(batch_2[number_list], na.rm = T), .after = "valid_votes")
 
-# Problems here for: Autonomous Region, Kosovo, Netherlands Antilles, Serbia and Montonegro (but thats okay)
 write.csv(batch_2,"batch_2.csv", row.names = FALSE)
 
  
