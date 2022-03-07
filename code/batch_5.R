@@ -743,9 +743,11 @@ ser_pres08 = extra_cols(ser_pres08, "Serbia", "2008-01-20", "Presidential")
 ser_pres08$country =  countryname(ser_pres08$country)
 
 ser_pres08_coo = read_xlsx("Serbia/ser_pres08_national.xlsx")
-ser_pres08_coo = ser_pres08_coo %>% filter(is.na(Number))
-test = ser_pres08_coo[-c(1:5),]
-colSums(test[4:15])
+ser_pres08_coo = ser_pres08_coo[1,]
+ser_pres08_coo = ser_pres08_coo[-c(2,3,5,6,8)]
+names(ser_pres08_coo)[1:3] = c("country", "registered_voters", "total_votes")
+ser_pres08_coo = add_column(ser_pres08_coo, valid_votes = rowSums(ser_pres08_coo[4:10]), .after = "total_votes")
+names(ser_pres08_coo) = iconv(names(ser_pres08_coo), from = 'UTF-8', to = 'ASCII//TRANSLIT')
 #this is a dead end
 ##### Ukraine ------------------------------------------------------------------
 
@@ -1354,14 +1356,27 @@ ukr_leg06 = add_column(ukr_leg06, invalid_votes = NA, .after = 'blanco_votes')
 batch_5 = bind_rows(ukr_leg06, geol_04, geol_08, geol_12, geol_16, geop_08, geop_13, 
                     geop_18, mac_16, mol_leg09, mol_leg09april, mol_leg10,
                     tur_leg15, tur_leg15_nov, tur_leg18, tur_pres14, tur_pres18,
-                    ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17,
+                    ser_leg12, ser_leg14, ser_leg16, ser_pres12, ser_pres17, ser_pres08, 
                     ukr_leg12, ukr_leg14, ukr_leg19, ukr_leg07, 
                     ukr_leg02, ukr_pres10, ukr_pres14, ukr_pres19, tim_leg17, 
                     tim_leg18, saot_pres06, saot_pres11, sen_pres00, ven_13,
-                    pol_05_leg, mau_pres_19, ven_06
+                    pol_05_leg, mau_pres_19, ven_06, colleg_10
                     )
 
 
+names(batch_5)[1] <- 'country_of_residence' 
+
+batch_5 = add_column(batch_5, cor_iso3 = countrycode(batch_5$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+batch_5 = add_column(batch_5, coo_iso3 = countrycode(batch_5$country_of_origin , 'country.name', 'iso3c'), .after = 'country_of_origin')
+number_list = c(13)
+start = 13
+while (start < 101){
+  start = start +2
+  number_list = append(number_list, start)
+}
+number_list
+batch_5 = add_column(batch_5, valid_votes2 = rowSums(batch_5[number_list], na.rm = T), .after = "valid_votes")
+batch_5 = batch_5[-106]
 write.csv(batch_5, 'batch_5.csv', row.names = F)
 
 ## country of origing
