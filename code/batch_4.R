@@ -217,14 +217,8 @@ ro_leg_00 = ro_leg_00[-120]
 ro_leg_04 = left_join(df_list[[2]], df_list_2[[2]])
 ro_leg_04$pol_stat = gsub("-.*", "", ro_leg_04$pol_stat)
 ro_leg_04$pol_stat = gsub("R.A.EGIPT", "R.A. EGIPT", ro_leg_04$pol_stat)
+names(ro_leg_04)[1] = 'country'
 names_ro = names(ro_leg_04)
-ro_leg_04 = aggregate(c(ro_leg_04[2:53]), by = ro_leg_04[1], sum)
-names_ro[1] = 'country'
-names(ro_leg_04) = names_ro
-names_ro
-
-ro_leg_04 = main_function(ro_leg_04,  "D.A. PNL-PD", "AC-MACEDONENI", 5, "PSD+PUR")
-ro_leg_04 = extra_cols(ro_leg_04, 'Romania', '2004-11-28', 'Legislative')
 ro_leg_04$weird = countrycode(tolower(ro_leg_04$country), 'romanian', 'english', custom_dict = custom_dict)
 romanian = "anglia, bosnia, bosnia si hertegovina, confederatia elvetiana, federatia rusa, kuwait, macedonia, malaezia, marea britanie, r.a. egipt, r.f.germana, r.f.nigeria, r.i.iran, r.p.d. coreeana, r.s.vietnam, regatul arabiei saudite, regatul belgiei, regatul danemarcei, regatul tarilor de jos, rep.indonezia, republica africa de sud, republica algeriana, republica angola, republica argentina, republica armenia, republica austria, republica azerbaidjan, republica belarus, republica bulgaria, republica ceha, republica chile, republica cipru, republica columbia, republica coreea, republica croatia, republica cuba, republica elena, republica filipine, republica finlanda, republica franceza, republica georgia, republica india, republica irak, republica irlanda, republica italiana, republica libaneza, republica populara chineza, serbia si muntenegru, sua, uzbeckistan"
 romanian = unlist(str_split(romanian, ", "))
@@ -237,9 +231,17 @@ for (i in seq_along(romanian)){
   ro_leg_04$weird[tolower(ro_leg_04$country) == romanian[i]] = english[i]
 }
 # save as I will need this for presidential
-another_dic = ro_leg_04[c(1,108)]
+another_dic = ro_leg_04[c(1,54)]
 ro_leg_04$country = countryname(ro_leg_04$weird)
-ro_leg_04 = ro_leg_04[-108]
+ro_leg_04 = ro_leg_04[-54]
+ro_leg_04 = aggregate(c(ro_leg_04[2:53]), by = ro_leg_04[1], sum)
+names(ro_leg_04) = names_ro
+
+
+
+ro_leg_04 = main_function(ro_leg_04,  "D.A. PNL-PD", "AC-MACEDONENI", 5, "PSD+PUR")
+ro_leg_04 = extra_cols(ro_leg_04, 'Romania', '2004-11-28', 'Legislative')
+
 
 ## Presidential 2000
 ro_pres00 = left_join(df_list[[4]], df_list_2[[4]])
@@ -277,17 +279,18 @@ ro_votes[is.na(ro_votes)] = 0
 ro_pres04 = left_join(df_list[[5]], ro_votes)
 ro_pres04$pol_stat = gsub("-.*", "", ro_pres04$pol_stat)
 ro_pres04$pol_stat = gsub("R.A.EGIPT", "R.A. EGIPT", ro_pres04$pol_stat)
+names(ro_pres04)[1] = 'country'
 names_ro = names(ro_pres04)
+ro_pres04$weird = countrycode(ro_pres04$country, 'country', 'weird', custom_dict = another_dic)
+ro_pres04$country = countryname(ro_pres04$weird)
+ro_pres04 = ro_pres04[-17]
 ro_pres04 = aggregate(c(ro_pres04[2:16]), by = ro_pres04[1], sum)
-names_ro[1] = 'country'
 names(ro_pres04) = names_ro
-names_ro
+
 
 ro_pres04 = main_function(ro_pres04, "TRAIAN BASESCU", "AUREL RADULESCU", 5, "ADRIAN NASTASE")
 ro_pres04 = extra_cols(ro_pres04, 'Romania', '2004-11-28', 'Presidential')
-ro_pres04$weird = countrycode(ro_pres04$country, 'country', 'weird', custom_dict = another_dic)
-ro_pres04$country = countryname(ro_pres04$weird)
-ro_pres04 = ro_pres04[-34]
+
 
 #Legislative 2008
 ro_leg08 = left_join(df_list[[3]], df_list_2[[3]])
@@ -1085,42 +1088,15 @@ batch_4 = bind_rows(ro_leg_00, bo_19, ind_14, ro_leg_04, ro_pres00, ro_pres04,
                     bu_11, cz_02, col_06)
 
 # only colombia 2002 missing //
-
-
+names(batch_4)[1] <- 'country_of_residence' 
+batch_4 = add_column(batch_4, cor_iso3 = countrycode(batch_4$country_of_residence, 'country.name', 'iso3c'), .after = 'country_of_residence')
+batch_4 = add_column(batch_4, coo_iso3 = countrycode(batch_4$country_of_origin , 'country.name', 'iso3c'), .after = 'country_of_origin')
+number_list = c(13)
+start = 13
+while (start < 121){
+  start = start +2
+  number_list = append(number_list, start)
+}
+number_list
+batch_4 = add_column(batch_4, valid_votes2 = rowSums(batch_4[number_list], na.rm = T), .after = "valid_votes")
 write.csv(batch_4, 'batch_4.csv', row.names = F)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
