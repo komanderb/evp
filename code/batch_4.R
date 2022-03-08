@@ -891,12 +891,14 @@ per_16 = per_16[-40]
 #### Colombia ==================================================================
 
 #Legislative 2002
-# this is so bad! 
+colleg_02_names = read.delim("colleg02_party_dic.txt", header = F, sep = ",")
+colleg_02_names$V2 = trimws(colleg_02_names$V2)
+colleg_02_names$V1 = trimws(colleg_02_names$V1)
 setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/Colombia/Colombia 2002 Camara")
 
 my_files <- list.files(pattern = "\\.xlsx$")
 
-df_list <- lapply(my_files, read_xlsx, range = cell_rows(8:35), trim = T)
+df_list <- lapply(my_files, read_xlsx, range = cell_rows(7:35), trim = T)
 names(df_list) <- gsub("\\.xlsx$", "", my_files)
 '%ni%' <- Negate('%in%')
 list_ind = c()
@@ -921,12 +923,15 @@ for(i in seq_along(df_list))
 colleg_02 =  do.call(rbind, df_list)
 colleg_02 = colleg_02[-c(1:3)]
 colleg_02 = colleg_02 %>% filter(!(is.na(Candidato)))
-colleg_02 = colleg_02 %>% pivot_wider(names_from = Candidato, values_from = Votos)
-colleg_02[2:28] = lapply(colleg_02[2:28], function(y) as.numeric(gsub("\\.", "", y)))
-colleg_02 = add_column(colleg_02, valid_votes = rowSums(colleg_02[2:26]), .after = 'country')
-colleg_02 = colleg_02[-c(28,29)]
-names(colleg_02) = iconv(names(colleg_02), from = "UTF-8", to = 'ASCII//TRANSLIT')
-str(colleg_02)
+colleg_02$Candidato = iconv(colleg_02$Candidato, from = "UTF-8", to = 'ASCII//TRANSLIT')
+colleg_02_names[26,] = c("Total Votos:", "total_votes")
+colleg_02_names[27,]= c("Total Registros:", "registered_voters")
+colleg_02$Candidato = countrycode(colleg_02$Candidato, "V1", "V2", custom_dict = colleg_02_names)
+colleg_02[2] = lapply(colleg_02[2], function(y) as.numeric(gsub("\\.", "", y)))
+colleg_02 = colleg_02 %>% pivot_wider(names_from = Candidato, values_from = Votos, values_fn = sum, values_fill = 0)
+
+colleg_02 = add_column(colleg_02, valid_votes = rowSums(colleg_02[2:16]), .after = 'country')
+#colleg_02 = colleg_02[-c(28,29)]
 colleg_02$weird= countryname(colleg_02$country)
 colombian = "Antilas Holondesas, Dom. Rep., Guayana, Malysia"
 colombian = unlist(str_split(colombian, ", "))
@@ -934,15 +939,14 @@ english = c("Netherlands Antilles", "Dominican Republic", "Guyana",  "Malaysia")
 for (i in seq_along(colombian)){
   colleg_02$weird[colleg_02$country == colombian[i]] = english[i]
 }
+
 colleg_02$country = countryname(colleg_02$weird)
-colleg_02 = colleg_02[-28]
+colleg_02 = colleg_02[-20]
 
-# who won this election?
-# There is this website: https://www.registraduria.gov.co/-Camara,4280-.html
-#But this is only for 2018 and everything else seems to be down
+str(colleg_02)
 
-colleg_02 = main_function(colleg_02, 'RAFAEL DE JESUS CASTELLAR', 'ALVARO DE JESUS ZULETA CORTES', 3, ) 
-
+colleg_02 = main_function(colleg_02, 'MOV  NACIONAL PROGRESISTA', 'MOV. CIVICO INDEPENDIENTE', 5, "PARTIDO LIBERAL COLOMBIANO") 
+colleg_02 = extra_cols(colleg_02, "Colombia", "2002-03-10", "Legislative")
 
 ## Legislative 2006
 # file structure is super weird -> needs some extra attention
@@ -1085,7 +1089,7 @@ ro_leg_00 = add_column(ro_leg_00, invalid_votes = NA, .after = 'blanco_votes')
 
 batch_4 = bind_rows(ro_leg_00, bo_19, ind_14, ro_leg_04, ro_pres00, ro_pres04,
                     ro_leg08, ro_16, rol16, buleg_13, buleg_09, per_16, per_06, perl_06, bu_05,
-                    bu_11, cz_02, col_06)
+                    bu_11, cz_02, col_06, colleg_02)
 
 # only colombia 2002 missing //
 names(batch_4)[1] <- 'country_of_residence' 
@@ -1099,4 +1103,5 @@ while (start < 121){
 }
 number_list
 batch_4 = add_column(batch_4, valid_votes2 = rowSums(batch_4[number_list], na.rm = T), .after = "valid_votes")
+setwd("C:/Users/lenovo/Documents/GitHub/evp/final_data")
 write.csv(batch_4, 'batch_4.csv', row.names = F)
