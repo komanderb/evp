@@ -243,21 +243,6 @@ type_list <- append(type_list, "Legislative")
 date_list <- append(date_list, "20121209")
 
 
-# actually these two were not in evp data? what was I doing?? 
-# pres 00
-pres_00 <- "RO_PRES_00.csv"
-pres_00e <- "RO_PRES_00_extra.csv"
-ro_pres_00 <- ro_maker(pres_00, pres_00e)
-
-
-# pres 04
-pres_04 <- "RO_PRES_04.csv"
-pres_04e <- "RO_PRES_04_extra.csv"
-ro_pres_04 <- ro_maker(pres_04, pres_04e)
-
-
-
-
 # Serbia ----------------------------------------------------------------------
 # Pres 08
 ser_pres_08 <- read_xlsx("SER_PRES_08.xlsx")
@@ -471,9 +456,70 @@ write_coo(final_df_list, country_list, type_list, date_list)
 
 
 
+# Forgotten Elections ----------------------------------------
+final_df_list <- c()
+country_list <- c()
+type_list <- c()
+date_list <- c()
+
+setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP/pub_coo")
+# Ro_pres 00
+pres_00 <- "RO_PRES_00.csv"
+pres_00e <- "RO_PRES_00_extra.csv"
+ro_pres_00 <- ro_maker(pres_00, pres_00e)
+
+final_df_list <- append(final_df_list, list(ro_pres_00))
+country_list <- append(country_list, "Romania")
+type_list <- append(type_list, "Presidential")
+date_list <- append(date_list, "20001126")
+
+# Ro_pres 04
+pres_04 <- "RO_PRES_04.csv"
+pres_04e <- "RO_PRES_04_extra.csv"
+ro_pres_04 <- ro_maker(pres_04, pres_04e)
+final_df_list <- append(final_df_list, list(ro_pres_04))
+country_list <- append(country_list, "Romania")
+type_list <- append(type_list, "Presidential")
+date_list <- append(date_list, "20041128")
+
+# Pol Leg 01 
+pol_leg_01 <- read_xls("Poland Leg. 2001 TOTAL (domestic+abroad) Results..xls")
+# that is not total no, that's domestic?? 
+pol_leg_01 <- pol_leg_01[-c(1:4)]
+pol_names <- names(pol_leg_01)
+pol_leg_01 <- as.data.frame(lapply(pol_leg_01,function(y) sum(y, na.rm = T)))
+names(pol_leg_01) <- pol_names
+valid = sum(pol_leg_01[1, 5:18])
+registered = sum(pol_leg_01[1, 1])
+pol_leg_01 <- pol_leg_01[-c(1:4)]
+names(pol_leg_01) <- iconv(names(pol_leg_01), from = "UTF-8", to = 'ASCII//TRANSLIT')
+pol_leg_01 <- add_column(pol_leg_01, SCOPE = "DOMESTIC", .before = 1)
+pol_leg_01 <- add_column(pol_leg_01, REGISTERED = registered, .after =  "SCOPE")
+pol_leg_01 <- add_column(pol_leg_01, VALID = valid, .after = "REGISTERED")
+
+final_df_list <- append(final_df_list, list(pol_leg_01))
+country_list <- append(country_list, "Poland")
+type_list <- append(type_list, "Legislative")
+date_list <- append(date_list, "20010923")
+
+# pol leg 07
+
+pol_leg_07 <- read_xlsx("POL_LEG_07.xlsx", col_names = F)
+pol_leg_07 <- pol_leg_07[c(6:7)]
+# 
+pol_leg_07$...6 <- iconv(pol_leg_07$...6, from = "UTF-8", to = 'ASCII//TRANSLIT')
+pol_leg_07 <- pol_leg_07 %>% pivot_wider(names_from = ...6, values_from = ...7)
+pol_leg_07 <- add_column(pol_leg_07, SCOPE = "DOMESTIC", .before = 1)
+
+final_df_list <- append(final_df_list, list(pol_leg_07))
+country_list <- append(country_list, "Poland")
+type_list <- append(type_list, "Legislative")
+date_list <- append(date_list, "20071021")
+
+type_list <- gsub("Legislative", "Leg", type_list)
+type_list <- gsub("Presidential", "Pres", type_list)
 
 
-
-
-
-
+# 
+setwd("G:/.shortcut-targets-by-id/1BiiqfA9L9DaS6ELE2OPJkvYdmM6Ws-x6/EVP. Data/publication_data")
+write_coo(final_df_list, country_list, type_list, date_list)
