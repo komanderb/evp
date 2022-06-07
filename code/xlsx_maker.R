@@ -10,6 +10,8 @@ setwd("C:/Users/lenovo/Documents/BSE/RA/Data/Data/EVP")
 df <- read.csv("evp_final.csv")
 df_coo <- read.csv("batch_5_coo.csv")
 
+df <- df[c(1:7)]
+df %>% filter(country_of_origin == "Poland" & !(duplicated(election_date)))
 ### function -------------------------------------------------------------------
 evp_split <- function(data){
   
@@ -71,12 +73,17 @@ setwd("G:/.shortcut-targets-by-id/1BiiqfA9L9DaS6ELE2OPJkvYdmM6Ws-x6/EVP. Data/pu
 # for cor
 
 evp_split(df)
+# I forgot that df 
+pol_df <- df %>% filter(country_of_origin == "Poland" & 
+                          election_date == "2005-09-25")
+evp_split(pol_df)
 
 ### Apply COO -----------------------------------------------------------------
 
 # new function as the other didn't work -> weird duplicates
 
 evp_split_coo <- function(data){
+  data <- subset(data, select = -c(national_winner, votes_national_winner))
   # this function is a bit easier as one row in data correspondends to one election
   for (i in c(1:nrow(data))){
     temp_df <- data[i,]
@@ -93,6 +100,8 @@ evp_split_coo <- function(data){
     temp_df <- temp_df %>% select(country, registered_voters, total_votes, valid_votes, null_votes, blanco_votes, invalid_votes, everything())
     # rename to desired names
     names(temp_df)[1:7] <- c("SCOPE", "REGISTERED", "ACTUAL", "VALID", "NULL", "BLANK", "INVALID")
+    # actually insert SCOPE 
+    temp_df$SCOPE <- "DOMESTIC"
     # reformat date string
     print_date <- gsub("-", "", date)
     if (election == "Legislative"){
